@@ -30,14 +30,21 @@ def load_data():
 
 df = load_data()
 
-# Initialize Dash app with Bootstrap theme
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# Initialize Dash app with Bootstrap theme and Font Awesome icons
+app = dash.Dash(__name__, external_stylesheets=[
+    dbc.themes.BOOTSTRAP,
+    dbc.icons.FONT_AWESOME,
+    "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+])
 app.title = "UAE Donations Analytics Dashboard"
 
-# Define color scheme
-colors = {
+# Define color schemes
+light_theme = {
     'background': '#f8f9fa',
+    'card_bg': '#ffffff',
     'text': '#212529',
+    'text_secondary': '#6c757d',
+    'border': '#dee2e6',
     'primary': '#0d6efd',
     'secondary': '#6c757d',
     'success': '#198754',
@@ -45,6 +52,22 @@ colors = {
     'warning': '#ffc107',
     'danger': '#dc3545'
 }
+
+dark_theme = {
+    'background': '#0d1117',
+    'card_bg': '#161b22',
+    'text': '#c9d1d9',
+    'text_secondary': '#8b949e',
+    'border': '#30363d',
+    'primary': '#58a6ff',
+    'secondary': '#8b949e',
+    'success': '#3fb950',
+    'info': '#79c0ff',
+    'warning': '#d29922',
+    'danger': '#f85149'
+}
+
+colors = light_theme
 
 # Get unique values for filters
 donation_types = sorted(df['donationtype'].unique())
@@ -54,18 +77,38 @@ quarters = sorted(df['quarter'].unique())
 
 # App Layout
 app.layout = dbc.Container([
+    # Theme toggle and header
     dbc.Row([
         dbc.Col([
-            html.H1("🎯 UAE Donations Analytics Dashboard", 
-                   className="text-center mb-4 mt-4",
-                   style={'color': colors['primary'], 'fontWeight': 'bold'})
-        ])
+            html.Div([
+                html.H1([
+                    html.I(className="fas fa-chart-line me-3"),
+                    "UAE Donations Analytics Dashboard"
+                ], className="text-center mb-2 mt-4", 
+                   style={'fontWeight': '700', 'fontFamily': 'Inter, sans-serif'},
+                   id='main-title'),
+                html.P("Real-time insights and comprehensive analysis of donation trends",
+                      className="text-center text-muted mb-3",
+                      id='subtitle')
+            ])
+        ], md=10),
+        dbc.Col([
+            dbc.Button([
+                html.I(id='theme-icon', className="fas fa-moon")
+            ], id='theme-toggle', color='secondary', outline=True, 
+               className="mt-4 float-end", size="sm")
+        ], md=2)
     ]),
+    
+    html.Hr(id='header-divider'),
     
     # Filters Section
     dbc.Card([
         dbc.CardBody([
-            html.H4("📊 Filters & Slicers", className="mb-3"),
+            html.H5([
+                html.I(className="fas fa-filter me-2"),
+                "Filters & Slicers"
+            ], className="mb-3", id='filters-title'),
             dbc.Row([
                 dbc.Col([
                     html.Label("Donation Type:", style={'fontWeight': 'bold'}),
@@ -125,45 +168,65 @@ app.layout = dbc.Container([
                 ], md=3),
             ])
         ])
-    ], className="mb-4", style={'backgroundColor': colors['background']}),
+    ], className="mb-4 shadow-sm", id='filters-card'),
     
     # KPI Cards
     dbc.Row([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("Total Donations", className="text-muted"),
-                    html.H3(id='total-donations', className="text-primary"),
-                    html.Small(id='donations-change', className="text-success")
+                    html.Div([
+                        html.I(className="fas fa-hand-holding-heart fa-2x mb-2", 
+                              style={'opacity': '0.7'}),
+                        html.H6("Total Donations", className="mb-2", 
+                               style={'fontWeight': '500'}),
+                        html.H3(id='total-donations', style={'fontWeight': '700'}),
+                        html.Small(id='donations-change')
+                    ], className="text-center")
                 ])
-            ], className="text-center")
+            ], className="shadow-sm h-100", id='kpi-card-1')
         ], md=3),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("Total Amount (AED)", className="text-muted"),
-                    html.H3(id='total-amount', className="text-success"),
-                    html.Small(id='amount-change', className="text-success")
+                    html.Div([
+                        html.I(className="fas fa-coins fa-2x mb-2", 
+                              style={'opacity': '0.7'}),
+                        html.H6("Total Amount (AED)", className="mb-2", 
+                               style={'fontWeight': '500'}),
+                        html.H3(id='total-amount', style={'fontWeight': '700'}),
+                        html.Small(id='amount-change')
+                    ], className="text-center")
                 ])
-            ], className="text-center")
+            ], className="shadow-sm h-100", id='kpi-card-2')
         ], md=3),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("Average Donation", className="text-muted"),
-                    html.H3(id='avg-donation', className="text-info"),
-                    html.Small(id='avg-change', className="text-success")
+                    html.Div([
+                        html.I(className="fas fa-chart-bar fa-2x mb-2", 
+                              style={'opacity': '0.7'}),
+                        html.H6("Average Donation", className="mb-2", 
+                               style={'fontWeight': '500'}),
+                        html.H3(id='avg-donation', style={'fontWeight': '700'}),
+                        html.Small(id='avg-change')
+                    ], className="text-center")
                 ])
-            ], className="text-center")
+            ], className="shadow-sm h-100", id='kpi-card-3')
         ], md=3),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("Unique Types", className="text-muted"),
-                    html.H3(id='unique-types', className="text-warning"),
-                    html.Small(id='types-info', className="text-muted")
+                    html.Div([
+                        html.I(className="fas fa-list-ul fa-2x mb-2", 
+                              style={'opacity': '0.7'}),
+                        html.H6("Unique Types", className="mb-2", 
+                               style={'fontWeight': '500'}),
+                        html.H3(id='unique-types', style={'fontWeight': '700'}),
+                        html.Small(id='types-info')
+                    ], className="text-center")
                 ])
-            ], className="text-center")
+            ], className="shadow-sm h-100", id='kpi-card-4')
         ], md=3),
     ], className="mb-4"),
     
@@ -172,18 +235,24 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("📈 Donation Trends Over Time", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-chart-line me-2"),
+                        "Donation Trends Over Time"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='trend-chart', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-1')
         ], md=8),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("🥧 Top 10 Donation Types", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-chart-pie me-2"),
+                        "Top 10 Donation Types"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='donation-types-pie', config={'displayModeBar': False})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-2')
         ], md=4),
     ], className="mb-4"),
     
@@ -192,10 +261,13 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("📊 Donation Distribution by Type", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-bars me-2"),
+                        "Donation Distribution by Type"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='donation-distribution', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-3')
         ], md=12),
     ], className="mb-4"),
     
@@ -204,18 +276,24 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("🔥 Heat Map: Donations by Hour & Day", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-th me-2"),
+                        "Heat Map: Donations by Hour & Day"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='heatmap-chart', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-4')
         ], md=6),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("📅 Seasonality Analysis", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-calendar-alt me-2"),
+                        "Seasonality Analysis"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='seasonality-chart', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-5')
         ], md=6),
     ], className="mb-4"),
     
@@ -224,18 +302,24 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("💰 Amount Distribution Analysis", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-dollar-sign me-2"),
+                        "Amount Distribution Analysis"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='amount-distribution', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-6')
         ], md=6),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("📆 Monthly Comparison by Year", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-calendar-check me-2"),
+                        "Monthly Comparison by Year"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='monthly-comparison', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-7')
         ], md=6),
     ], className="mb-4"),
     
@@ -244,18 +328,24 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("🎯 Cumulative Growth Analysis", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-arrow-trend-up me-2"),
+                        "Cumulative Growth Analysis"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='cumulative-chart', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-8')
         ], md=6),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("🔍 Top Performers Analysis", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-trophy me-2"),
+                        "Top Performers Analysis"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     dcc.Graph(id='top-performers', config={'displayModeBar': True})
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-9')
         ], md=6),
     ], className="mb-4"),
     
@@ -264,20 +354,74 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5("📋 Statistical Summary", className="mb-3"),
+                    html.H5([
+                        html.I(className="fas fa-table me-2"),
+                        "Statistical Summary"
+                    ], className="mb-3", style={'fontWeight': '600'}),
                     html.Div(id='stats-table')
                 ])
-            ])
+            ], className="shadow-sm", id='chart-card-10')
         ], md=12),
     ], className="mb-4"),
     
     html.Footer([
-        html.Hr(),
-        html.P("UAE Donations Analytics Dashboard | Data-Driven Insights", 
-               className="text-center text-muted")
+        html.Hr(id='footer-divider'),
+        html.P([
+            html.I(className="fas fa-chart-line me-2"),
+            "UAE Donations Analytics Dashboard | Data-Driven Insights"
+        ], className="text-center", id='footer-text')
     ])
     
-], fluid=True, style={'backgroundColor': colors['background']})
+], fluid=True, id='main-container')
+
+# Theme toggle callback
+@callback(
+    [Output('main-container', 'style'),
+     Output('filters-card', 'style'),
+     Output('kpi-card-1', 'style'),
+     Output('kpi-card-2', 'style'),
+     Output('kpi-card-3', 'style'),
+     Output('kpi-card-4', 'style'),
+     Output('chart-card-1', 'style'),
+     Output('chart-card-2', 'style'),
+     Output('chart-card-3', 'style'),
+     Output('chart-card-4', 'style'),
+     Output('chart-card-5', 'style'),
+     Output('chart-card-6', 'style'),
+     Output('chart-card-7', 'style'),
+     Output('chart-card-8', 'style'),
+     Output('chart-card-9', 'style'),
+     Output('chart-card-10', 'style'),
+     Output('main-title', 'style'),
+     Output('subtitle', 'style'),
+     Output('filters-title', 'style'),
+     Output('header-divider', 'style'),
+     Output('footer-divider', 'style'),
+     Output('footer-text', 'style'),
+     Output('theme-icon', 'className')],
+    [Input('theme-toggle', 'n_clicks')],
+    prevent_initial_call=False
+)
+def toggle_theme(n_clicks):
+    global colors
+    if n_clicks is None or n_clicks % 2 == 0:
+        colors = light_theme
+        icon = "fas fa-moon"
+    else:
+        colors = dark_theme
+        icon = "fas fa-sun"
+    
+    container_style = {'backgroundColor': colors['background'], 'fontFamily': 'Inter, sans-serif'}
+    card_style = {'backgroundColor': colors['card_bg'], 'color': colors['text'], 'border': f"1px solid {colors['border']}"}
+    title_style = {'color': colors['primary'], 'fontWeight': '700', 'fontFamily': 'Inter, sans-serif'}
+    subtitle_style = {'color': colors['text_secondary']}
+    divider_style = {'borderColor': colors['border']}
+    footer_style = {'color': colors['text_secondary']}
+    
+    return (container_style, card_style, card_style, card_style, card_style, card_style,
+            card_style, card_style, card_style, card_style, card_style, card_style,
+            card_style, card_style, card_style, card_style,
+            title_style, subtitle_style, title_style, divider_style, divider_style, footer_style, icon)
 
 # Callback for filtering data
 @callback(
@@ -303,9 +447,20 @@ app.layout = dbc.Container([
      Input('year-filter', 'value'),
      Input('quarter-filter', 'value'),
      Input('month-filter', 'value'),
-     Input('amount-range-filter', 'value')]
+     Input('amount-range-filter', 'value'),
+     Input('theme-toggle', 'n_clicks')]
 )
-def update_dashboard(donation_types, years, quarters, months, amount_range):
+def update_dashboard(donation_types, years, quarters, months, amount_range, theme_clicks):
+    # Determine current theme
+    global colors
+    if theme_clicks is None or theme_clicks % 2 == 0:
+        colors = light_theme
+    else:
+        colors = dark_theme
+    
+    # Set chart template based on theme
+    template = 'plotly_white' if colors == light_theme else 'plotly_dark'
+    
     # Filter data
     filtered_df = df.copy()
     
@@ -343,9 +498,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
     amount_pct = ((filtered_df['amount'].sum() / df['amount'].sum()) * 100)
     avg_pct = ((filtered_df['amount'].mean() / df['amount'].mean() - 1) * 100)
     
-    donations_change = f"📊 {donations_pct:.1f}% of total"
-    amount_change = f"💵 {amount_pct:.1f}% of total"
-    avg_change = f"{'📈' if avg_pct >= 0 else '📉'} {abs(avg_pct):.1f}% vs overall avg"
+    donations_change = f"{donations_pct:.1f}% of total"
+    amount_change = f"{amount_pct:.1f}% of total"
+    avg_change = f"{'+' if avg_pct >= 0 else ''}{avg_pct:.1f}% vs overall avg"
     types_info = f"Out of {df['donationtype'].nunique()} total types"
     
     # 1. Trend Chart - Daily aggregated donations
@@ -389,7 +544,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
     trend_fig.update_xaxes(title_text="Date", row=2, col=1)
     trend_fig.update_yaxes(title_text="Amount (AED)", row=1, col=1)
     trend_fig.update_yaxes(title_text="Number of Donations", row=2, col=1)
-    trend_fig.update_layout(height=500, showlegend=True, hovermode='x unified')
+    trend_fig.update_layout(height=500, showlegend=True, hovermode='x unified', 
+                           template=template, paper_bgcolor=colors['card_bg'], 
+                           plot_bgcolor=colors['card_bg'], font=dict(color=colors['text']))
     
     # 2. Donation Types Pie Chart
     top_types = filtered_df.groupby('donationtype')['amount'].sum().nlargest(10).reset_index()
@@ -397,7 +554,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
                      title='',
                      color_discrete_sequence=px.colors.qualitative.Set3)
     pie_fig.update_traces(textposition='inside', textinfo='percent+label')
-    pie_fig.update_layout(height=400, showlegend=False)
+    pie_fig.update_layout(height=400, showlegend=False, template=template,
+                         paper_bgcolor=colors['card_bg'], plot_bgcolor=colors['card_bg'],
+                         font=dict(color=colors['text']))
     
     # 3. Donation Distribution by Type (Bar Chart)
     type_stats = filtered_df.groupby('donationtype').agg({
@@ -422,7 +581,11 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
         xaxis_title='Total Amount (AED)',
         yaxis_title='Donation Type',
         showlegend=False,
-        hovermode='y'
+        hovermode='y',
+        template=template,
+        paper_bgcolor=colors['card_bg'],
+        plot_bgcolor=colors['card_bg'],
+        font=dict(color=colors['text'])
     )
     
     # 4. Heatmap - Hour vs Weekday
@@ -448,7 +611,11 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
         height=400,
         xaxis_title='Hour of Day',
         yaxis_title='Day of Week',
-        xaxis=dict(tickmode='linear')
+        xaxis=dict(tickmode='linear'),
+        template=template,
+        paper_bgcolor=colors['card_bg'],
+        plot_bgcolor=colors['card_bg'],
+        font=dict(color=colors['text'])
     )
     
     # 5. Seasonality Analysis - Monthly patterns
@@ -461,7 +628,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
                              title='',
                              labels={'month': 'Month', 'amount': 'Total Amount (AED)', 'year': 'Year'},
                              markers=True)
-    seasonality_fig.update_layout(height=400, hovermode='x unified')
+    seasonality_fig.update_layout(height=400, hovermode='x unified', template=template,
+                                 paper_bgcolor=colors['card_bg'], plot_bgcolor=colors['card_bg'],
+                                 font=dict(color=colors['text']))
     seasonality_fig.update_xaxes(tickmode='linear', tick0=1, dtick=1)
     
     # 6. Amount Distribution (Histogram + Box Plot)
@@ -487,7 +656,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
     
     amount_dist_fig.update_xaxes(title_text="Amount (AED)", row=2, col=1)
     amount_dist_fig.update_yaxes(title_text="Frequency", row=1, col=1)
-    amount_dist_fig.update_layout(height=500, showlegend=False)
+    amount_dist_fig.update_layout(height=500, showlegend=False, template=template,
+                                 paper_bgcolor=colors['card_bg'], plot_bgcolor=colors['card_bg'],
+                                 font=dict(color=colors['text']))
     
     # 7. Monthly Comparison by Year
     monthly_comparison = filtered_df.groupby(['year', 'month_name', 'month']).agg({
@@ -499,7 +670,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
                              barmode='group',
                              title='',
                              labels={'month_name': 'Month', 'amount': 'Total Amount (AED)'})
-    monthly_comp_fig.update_layout(height=400, hovermode='x unified')
+    monthly_comp_fig.update_layout(height=400, hovermode='x unified', template=template,
+                                  paper_bgcolor=colors['card_bg'], plot_bgcolor=colors['card_bg'],
+                                  font=dict(color=colors['text']))
     
     # 8. Cumulative Growth
     cumulative_data = filtered_df.sort_values('donationdate').copy()
@@ -527,7 +700,9 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
     cumulative_fig.update_xaxes(title_text="Date")
     cumulative_fig.update_yaxes(title_text="Cumulative Amount (AED)", secondary_y=False)
     cumulative_fig.update_yaxes(title_text="Cumulative Count", secondary_y=True)
-    cumulative_fig.update_layout(height=400, hovermode='x unified')
+    cumulative_fig.update_layout(height=400, hovermode='x unified', template=template,
+                                paper_bgcolor=colors['card_bg'], plot_bgcolor=colors['card_bg'],
+                                font=dict(color=colors['text']))
     
     # 9. Top Performers - Multiple metrics
     top_performers = filtered_df.groupby('donationtype').agg({
@@ -552,7 +727,11 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
         xaxis_title='Donation Type',
         yaxis_title='Total Amount (AED)',
         xaxis_tickangle=-45,
-        showlegend=False
+        showlegend=False,
+        template=template,
+        paper_bgcolor=colors['card_bg'],
+        plot_bgcolor=colors['card_bg'],
+        font=dict(color=colors['text'])
     )
     
     # 10. Statistics Table
@@ -581,7 +760,8 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
         bordered=True,
         hover=True,
         responsive=True,
-        className="mt-3"
+        className="mt-3",
+        dark=True if colors == dark_theme else False
     )
     
     return (total_donations, total_amount, avg_donation, unique_types,
@@ -592,4 +772,4 @@ def update_dashboard(donation_types, years, quarters, months, amount_range):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8050)
+    app.run(debug=True, port=8050)
