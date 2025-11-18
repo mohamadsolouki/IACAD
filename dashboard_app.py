@@ -15,13 +15,13 @@ from datetime import datetime, timedelta
 import numpy as np
 from scipy import stats
 from pathlib import Path
-from hijri_converter import Hijri, Gregorian
 
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
 
-DATA_PATH = Path('data/General_Donation.csv')
+DATA_PATH = Path('data/General_Donation_Processed.csv')
+RAW_DATA_PATH = Path('data/General_Donation.csv')
 APP_TITLE = "UAE Donations Analytics Dashboard"
 PORT = 8050
 
@@ -62,88 +62,59 @@ LIGHT_CHART_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8
 DARK_CHART_COLORS = ['#3b82f6', '#34d399', '#fbbf24', '#f87171', '#22d3ee', '#a78bfa', '#f472b6', '#fb923c']
 
 # ============================================================================
-# HIJRI CALENDAR FUNCTIONS
-# ============================================================================
-
-def get_hijri_date(gregorian_date):
-    """Convert Gregorian date to Hijri date."""
-    try:
-        g = Gregorian(gregorian_date.year, gregorian_date.month, gregorian_date.day)
-        h = g.to_hijri()
-        return h
-    except:
-        return None
-
-def is_ramadan(gregorian_date):
-    """Check if a Gregorian date falls in Ramadan."""
-    hijri = get_hijri_date(gregorian_date)
-    if hijri:
-        return hijri.month == 9
-    return False
-
-def get_hijri_month_name(month_num):
-    """Get Hijri month name."""
-    months = {
-        1: 'Muharram', 2: 'Safar', 3: 'Rabi al-Awwal', 4: 'Rabi al-Thani',
-        5: 'Jumada al-Awwal', 6: 'Jumada al-Thani', 7: 'Rajab', 8: 'Shaban',
-        9: 'Ramadan', 10: 'Shawwal', 11: 'Dhul Qadah', 12: 'Dhul Hijjah'
-    }
-    return months.get(month_num, 'Unknown')
-
-def identify_islamic_events(gregorian_date):
-    """Identify Islamic events for a given date."""
-    hijri = get_hijri_date(gregorian_date)
-    if not hijri:
-        return None
-    
-    if hijri.month == 9:
-        if 1 <= hijri.day <= 10:
-            return 'Ramadan (First 10 Days)'
-        elif 11 <= hijri.day <= 20:
-            return 'Ramadan (Middle 10 Days)'
-        else:
-            return 'Ramadan (Last 10 Days)'
-    elif hijri.month == 10 and hijri.day <= 3:
-        return 'Eid al-Fitr'
-    elif hijri.month == 12 and 8 <= hijri.day <= 13:
-        return 'Hajj & Eid al-Adha'
-    elif hijri.month == 1 and hijri.day == 10:
-        return 'Day of Ashura'
-    elif hijri.month == 3 and hijri.day == 12:
-        return 'Mawlid al-Nabi'
-    
-    return None
-
-# ============================================================================
 # DATA LOADING AND PROCESSING
 # ============================================================================
 
 def load_and_process_data(file_path: Path) -> pd.DataFrame:
-    """Load and process donation data with Hijri calendar integration."""
+    """Load preprocessed donation data."""
     try:
+        # Check if processed file exists
+        if not file_path.exists():
+            print(f"Processed data file not found: {file_path}")
+            print(f"Please run 'python preprocess_data.py' first to generate the processed dataset.")
+            
+            # Try to load raw data as fallback
+            if RAW_DATA_PATH.exists():
+                print(f"Loading raw data from {RAW_DATA_PATH} as fallback...")
+                df = pd.read_csv(RAW_DATA_PATH)
+                df['donationdate'] = pd.to_datetime(df['donationdate'], errors='coerce')
+                df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+                df = df.dropna(subset=['donationdate', 'amount'])
+                
+                # Add minimal required columns
+                df['year'] = df['donationdate'].dt.year
+                df['month'] = df['donationdate'].dt.month
+                df['month_name'] = df['donationdate'].dt.strftime('%B')
+                df['quarter'] = df['donationdate'].dt.quarter
+                df['day'] = df['donationdate'].dt.day
+                df['weekday'] = df['donationdate'].dt.day_name()
+                df['week'] = df['donationdate'].dt.isocalendar().week
+                df['hour'] = df['donationdate'].dt.hour
+                df['date'] = df['donationdate'].dt.date
+                
+                # Add empty Hijri columns
+                df['is_ramadan'] = False
+                df['islamic_event'] = None
+                df['hijri_month'] = None
+                df['hijri_month_name'] = None
+                df['donationtype_en'] = df['donationtype']
+                
+                print("WARNING: Using raw data without Hijri calendar and translations.")
+                print("For full features, please run: python preprocess_data.py")
+                return df
+            else:
+                raise FileNotFoundError(f"Neither processed nor raw data file found!")
+        
+        # Load processed data
+        print(f"Loading preprocessed data from {file_path}...")
         df = pd.read_csv(file_path)
         
-        df['donationdate'] = pd.to_datetime(df['donationdate'], errors='coerce')
-        df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-        df = df.dropna(subset=['donationdate', 'amount'])
+        # Convert date columns
+        df['donationdate'] = pd.to_datetime(df['donationdate'])
+        df['date'] = pd.to_datetime(df['date']).dt.date
         
-        # Extract time dimensions
-        df['year'] = df['donationdate'].dt.year
-        df['month'] = df['donationdate'].dt.month
-        df['month_name'] = df['donationdate'].dt.strftime('%B')
-        df['quarter'] = df['donationdate'].dt.quarter
-        df['day'] = df['donationdate'].dt.day
-        df['weekday'] = df['donationdate'].dt.day_name()
-        df['week'] = df['donationdate'].dt.isocalendar().week
-        df['hour'] = df['donationdate'].dt.hour
-        df['date'] = df['donationdate'].dt.date
-        
-        # Add Hijri calendar information
-        print("Adding Hijri calendar information...")
-        df['is_ramadan'] = df['donationdate'].apply(lambda x: is_ramadan(x.date()))
-        df['islamic_event'] = df['donationdate'].apply(lambda x: identify_islamic_events(x.date()))
-        df['hijri_month'] = df['donationdate'].apply(lambda x: get_hijri_date(x.date()).month if get_hijri_date(x.date()) else None)
-        df['hijri_month_name'] = df['hijri_month'].apply(lambda x: get_hijri_month_name(x) if x else None)
+        print(f"✓ Loaded {len(df):,} preprocessed records")
+        print(f"✓ Ramadan donations: {df['is_ramadan'].sum():,} ({df['is_ramadan'].sum() / len(df) * 100:.1f}%)")
         
         return df
     except Exception as e:
@@ -437,7 +408,10 @@ def create_category_distribution(df: pd.DataFrame, top_n: int = 10, dark_mode: b
     """Create horizontal bar chart for donation types."""
     colors = get_theme_colors(dark_mode)
     
-    category_data = df.groupby('donationtype').agg({
+    # Use English translations if available, otherwise use original
+    category_col = 'donationtype_en' if 'donationtype_en' in df.columns else 'donationtype'
+    
+    category_data = df.groupby(category_col).agg({
         'amount': 'sum',
         'id': 'count'
     }).reset_index()
@@ -448,7 +422,7 @@ def create_category_distribution(df: pd.DataFrame, top_n: int = 10, dark_mode: b
     fig = go.Figure()
     
     fig.add_trace(go.Bar(
-        y=category_data['donationtype'],
+        y=category_data[category_col],
         x=category_data['amount'],
         orientation='h',
         marker=dict(
@@ -912,7 +886,11 @@ def initialize_filters(n_clicks):
     start_date = df['donationdate'].min().date()
     end_date = df['donationdate'].max().date()
     
-    donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype'].unique())]
+    # Use English translations if available
+    if 'donationtype_en' in df.columns:
+        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype_en'].unique()) if pd.notna(dt)]
+    else:
+        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype'].unique())]
     
     amount_min = float(df['amount'].min())
     amount_max = float(df['amount'].max())
@@ -941,7 +919,11 @@ def filter_data(apply_clicks, reset_clicks, start_date, end_date, donation_types
         ]
     
     if donation_types:
-        filtered_df = filtered_df[filtered_df['donationtype'].isin(donation_types)]
+        # Filter by English translations if available
+        if 'donationtype_en' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['donationtype_en'].isin(donation_types)]
+        else:
+            filtered_df = filtered_df[filtered_df['donationtype'].isin(donation_types)]
     
     if amount_range:
         filtered_df = filtered_df[
