@@ -460,7 +460,7 @@ def create_monthly_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
         colorscale='Plasma',
         text=pivot.values,
         texttemplate='%{text:,.0f}',
-        textfont={"size": 9},
+        textfont={"size": 11},
         colorbar=dict(title="Amount (AED)")
     ))
     
@@ -469,8 +469,8 @@ def create_monthly_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
         xaxis_title="Month",
         yaxis_title="Day of Week",
         template=get_plot_template(dark_mode),
-        height=400,
-        margin=dict(l=100, r=50, t=60, b=50)
+        height=600,
+        margin=dict(l=120, r=50, t=60, b=50)
     )
     
     return fig
@@ -545,6 +545,424 @@ def create_distribution_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.F
         template=get_plot_template(dark_mode),
         height=400,
         margin=dict(l=50, r=50, t=60, b=50)
+    )
+    
+    return fig
+
+def create_time_weekday_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Create heatmap showing donation patterns by hour and weekday."""
+    heatmap_data = df.groupby(['weekday', 'hour'])['amount'].sum().reset_index()
+    pivot = heatmap_data.pivot(index='weekday', columns='hour', values='amount')
+    
+    weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    pivot = pivot.reindex([day for day in weekday_order if day in pivot.index])
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=pivot.values,
+        x=pivot.columns,
+        y=pivot.index,
+        colorscale='RdYlGn',
+        text=pivot.values,
+        texttemplate='%{text:,.0f}',
+        textfont={"size": 10},
+        colorbar=dict(title="Amount (AED)")
+    ))
+    
+    fig.update_layout(
+        title="Donation Heatmap: Hour of Day vs Weekday",
+        xaxis_title="Hour of Day",
+        yaxis_title="Day of Week",
+        template=get_plot_template(dark_mode),
+        height=600,
+        margin=dict(l=120, r=50, t=60, b=50)
+    )
+    
+    return fig
+
+def create_yearly_monthly_analysis(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Create comprehensive year-month analysis with count and average."""
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    yearly_monthly = df.groupby(['year', 'month']).agg({
+        'amount': ['sum', 'mean', 'count']
+    }).reset_index()
+    
+    yearly_monthly.columns = ['year', 'month', 'total', 'average', 'count']
+    yearly_monthly['year_month'] = yearly_monthly['year'].astype(str) + '-' + yearly_monthly['month'].astype(str).str.zfill(2)
+    
+    fig = make_subplots(
+        rows=3, cols=1,
+        subplot_titles=('Total Amount by Year-Month', 'Number of Donations', 'Average Donation Amount'),
+        vertical_spacing=0.1,
+        row_heights=[0.33, 0.33, 0.34]
+    )
+    
+    # Total amount
+    fig.add_trace(
+        go.Scatter(
+            x=yearly_monthly['year_month'],
+            y=yearly_monthly['total'],
+            mode='lines+markers',
+            name='Total',
+            line=dict(color=chart_colors[0], width=2),
+            marker=dict(size=6),
+            fill='tozeroy',
+            fillcolor=f"rgba{tuple(list(int(chart_colors[0].lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + [0.2])}"
+        ),
+        row=1, col=1
+    )
+    
+    # Count
+    fig.add_trace(
+        go.Bar(
+            x=yearly_monthly['year_month'],
+            y=yearly_monthly['count'],
+            name='Count',
+            marker_color=chart_colors[1]
+        ),
+        row=2, col=1
+    )
+    
+    # Average
+    fig.add_trace(
+        go.Scatter(
+            x=yearly_monthly['year_month'],
+            y=yearly_monthly['average'],
+            mode='lines+markers',
+            name='Average',
+            line=dict(color=chart_colors[3], width=2),
+            marker=dict(size=6)
+        ),
+        row=3, col=1
+    )
+    
+    fig.update_xaxes(title_text="Year-Month", row=3, col=1, tickangle=-45)
+    fig.update_yaxes(title_text="Amount (AED)", row=1, col=1)
+    fig.update_yaxes(title_text="Count", row=2, col=1)
+    fig.update_yaxes(title_text="Avg (AED)", row=3, col=1)
+    
+    fig.update_layout(
+        title_text="Year-Month Analysis: Amount, Count, and Average",
+        template=get_plot_template(dark_mode),
+        height=900,
+        showlegend=False,
+        margin=dict(l=50, r=50, t=80, b=100)
+    )
+    
+    return fig
+
+def create_yearly_summary(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Create yearly summary with multiple metrics."""
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    yearly = df.groupby('year').agg({
+        'amount': ['sum', 'mean', 'median'],
+        'id': 'count'
+    }).reset_index()
+    
+    yearly.columns = ['year', 'total', 'average', 'median', 'count']
+    
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=('Total Amount by Year', 'Number of Donations', 'Average Donation', 'Median Donation'),
+        specs=[[{'type': 'bar'}, {'type': 'bar'}],
+               [{'type': 'bar'}, {'type': 'bar'}]]
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=yearly['year'],
+            y=yearly['total'],
+            marker_color=chart_colors[0],
+            text=yearly['total'].apply(lambda x: f'{x:,.0f}'),
+            textposition='outside'
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=yearly['year'],
+            y=yearly['count'],
+            marker_color=chart_colors[1],
+            text=yearly['count'].apply(lambda x: f'{x:,}'),
+            textposition='outside'
+        ),
+        row=1, col=2
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=yearly['year'],
+            y=yearly['average'],
+            marker_color=chart_colors[2],
+            text=yearly['average'].apply(lambda x: f'{x:.2f}'),
+            textposition='outside'
+        ),
+        row=2, col=1
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=yearly['year'],
+            y=yearly['median'],
+            marker_color=chart_colors[3],
+            text=yearly['median'].apply(lambda x: f'{x:.2f}'),
+            textposition='outside'
+        ),
+        row=2, col=2
+    )
+    
+    fig.update_xaxes(title_text="Year", row=1, col=1)
+    fig.update_xaxes(title_text="Year", row=1, col=2)
+    fig.update_xaxes(title_text="Year", row=2, col=1)
+    fig.update_xaxes(title_text="Year", row=2, col=2)
+    
+    fig.update_yaxes(title_text="Amount (AED)", row=1, col=1)
+    fig.update_yaxes(title_text="Count", row=1, col=2)
+    fig.update_yaxes(title_text="Avg (AED)", row=2, col=1)
+    fig.update_yaxes(title_text="Median (AED)", row=2, col=2)
+    
+    fig.update_layout(
+        title_text="Yearly Summary Analysis",
+        template=get_plot_template(dark_mode),
+        height=600,
+        showlegend=False,
+        margin=dict(l=50, r=50, t=80, b=50)
+    )
+    
+    return fig
+
+def create_donor_behavior_analysis(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Analyze donor behavior patterns."""
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    # Group by donor
+    donor_stats = df.groupby('id').agg({
+        'amount': ['sum', 'mean', 'count']
+    }).reset_index()
+    
+    donor_stats.columns = ['donor_id', 'total_donated', 'avg_donation', 'donation_count']
+    
+    # Categorize donors
+    donor_stats['category'] = pd.cut(
+        donor_stats['donation_count'],
+        bins=[0, 1, 5, 10, float('inf')],
+        labels=['One-time', 'Occasional (2-5)', 'Regular (6-10)', 'Frequent (10+)']
+    )
+    
+    category_summary = donor_stats.groupby('category').agg({
+        'donor_id': 'count',
+        'total_donated': 'sum',
+        'avg_donation': 'mean'
+    }).reset_index()
+    
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=('Donor Categories', 'Total Amount by Category'),
+        specs=[[{'type': 'pie'}, {'type': 'bar'}]]
+    )
+    
+    fig.add_trace(
+        go.Pie(
+            labels=category_summary['category'],
+            values=category_summary['donor_id'],
+            marker=dict(colors=chart_colors),
+            textinfo='label+percent',
+            hovertemplate='<b>%{label}</b><br>Donors: %{value}<br>Percentage: %{percent}<extra></extra>'
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=category_summary['category'],
+            y=category_summary['total_donated'],
+            marker_color=chart_colors,
+            text=category_summary['total_donated'].apply(lambda x: f'{x:,.0f}'),
+            textposition='outside'
+        ),
+        row=1, col=2
+    )
+    
+    fig.update_xaxes(title_text="Donor Category", row=1, col=2)
+    fig.update_yaxes(title_text="Total Amount (AED)", row=1, col=2)
+    
+    fig.update_layout(
+        title_text="Donor Behavior Analysis",
+        template=get_plot_template(dark_mode),
+        height=400,
+        showlegend=False,
+        margin=dict(l=50, r=50, t=80, b=50)
+    )
+    
+    return fig
+
+def create_top_donors_chart(df: pd.DataFrame, dark_mode: bool = False, top_n: int = 10) -> go.Figure:
+    """Show top donors by total amount."""
+    colors = get_theme_colors(dark_mode)
+    
+    top_donors = df.groupby('id').agg({
+        'amount': ['sum', 'count']
+    }).reset_index()
+    
+    top_donors.columns = ['donor_id', 'total_amount', 'donation_count']
+    top_donors = top_donors.nlargest(top_n, 'total_amount')
+    top_donors = top_donors.sort_values('total_amount', ascending=True)
+    
+    # Anonymize donor IDs
+    top_donors['donor_label'] = ['Donor ' + str(i) for i in range(1, len(top_donors) + 1)]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        y=top_donors['donor_label'],
+        x=top_donors['total_amount'],
+        orientation='h',
+        marker=dict(
+            color=top_donors['total_amount'],
+            colorscale='Blues',
+            showscale=True,
+            colorbar=dict(title="Amount (AED)")
+        ),
+        text=top_donors['total_amount'].apply(lambda x: f'AED {x:,.0f}'),
+        textposition='auto',
+        hovertemplate='<b>%{y}</b><br>Total: AED %{x:,.0f}<br>Donations: %{customdata}<extra></extra>',
+        customdata=top_donors['donation_count']
+    ))
+    
+    fig.update_layout(
+        title=f"Top {top_n} Donors by Total Amount",
+        xaxis_title="Total Amount (AED)",
+        yaxis_title="",
+        template=get_plot_template(dark_mode),
+        height=500,
+        margin=dict(l=100, r=50, t=60, b=50)
+    )
+    
+    return fig
+
+def create_amount_range_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Create distribution by amount ranges."""
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    # Create amount ranges
+    df_copy = df.copy()
+    df_copy['amount_range'] = pd.cut(
+        df_copy['amount'],
+        bins=[0, 20, 50, 100, 200, 500, 1000, float('inf')],
+        labels=['0-20', '21-50', '51-100', '101-200', '201-500', '501-1000', '1000+']
+    )
+    
+    range_summary = df_copy.groupby('amount_range').agg({
+        'amount': ['sum', 'count']
+    }).reset_index()
+    
+    range_summary.columns = ['range', 'total_amount', 'count']
+    
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=('Count by Amount Range', 'Total Amount by Range'),
+        specs=[[{'type': 'bar'}, {'type': 'bar'}]]
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=range_summary['range'],
+            y=range_summary['count'],
+            marker_color=chart_colors[1],
+            text=range_summary['count'].apply(lambda x: f'{x:,}'),
+            textposition='outside'
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Bar(
+            x=range_summary['range'],
+            y=range_summary['total_amount'],
+            marker_color=chart_colors[0],
+            text=range_summary['total_amount'].apply(lambda x: f'{x:,.0f}'),
+            textposition='outside'
+        ),
+        row=1, col=2
+    )
+    
+    fig.update_xaxes(title_text="Amount Range (AED)", row=1, col=1)
+    fig.update_xaxes(title_text="Amount Range (AED)", row=1, col=2)
+    fig.update_yaxes(title_text="Count", row=1, col=1)
+    fig.update_yaxes(title_text="Total Amount (AED)", row=1, col=2)
+    
+    fig.update_layout(
+        title_text="Donation Amount Range Analysis",
+        template=get_plot_template(dark_mode),
+        height=400,
+        showlegend=False,
+        margin=dict(l=50, r=50, t=80, b=50)
+    )
+    
+    return fig
+
+def create_growth_trend_analysis(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+    """Create cumulative growth and trend analysis."""
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    # Daily cumulative
+    daily_data = df.groupby('date').agg({
+        'amount': 'sum',
+        'id': 'count'
+    }).reset_index().sort_values('date')
+    
+    daily_data['cumulative_amount'] = daily_data['amount'].cumsum()
+    daily_data['cumulative_count'] = daily_data['id'].cumsum()
+    
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=('Cumulative Amount Over Time', 'Cumulative Donation Count'),
+        vertical_spacing=0.12
+    )
+    
+    fig.add_trace(
+        go.Scatter(
+            x=daily_data['date'],
+            y=daily_data['cumulative_amount'],
+            mode='lines',
+            name='Cumulative Amount',
+            line=dict(color=chart_colors[0], width=2),
+            fill='tozeroy',
+            fillcolor=f"rgba{tuple(list(int(chart_colors[0].lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + [0.2])}"
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Scatter(
+            x=daily_data['date'],
+            y=daily_data['cumulative_count'],
+            mode='lines',
+            name='Cumulative Count',
+            line=dict(color=chart_colors[1], width=2),
+            fill='tozeroy',
+            fillcolor=f"rgba{tuple(list(int(chart_colors[1].lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + [0.2])}"
+        ),
+        row=2, col=1
+    )
+    
+    fig.update_xaxes(title_text="Date", row=2, col=1)
+    fig.update_yaxes(title_text="Cumulative Amount (AED)", row=1, col=1)
+    fig.update_yaxes(title_text="Cumulative Count", row=2, col=1)
+    
+    fig.update_layout(
+        title_text="Cumulative Growth Analysis",
+        template=get_plot_template(dark_mode),
+        height=600,
+        showlegend=False,
+        margin=dict(l=50, r=50, t=80, b=50)
     )
     
     return fig
@@ -781,21 +1199,48 @@ app.layout = html.Div([
                         ], md=6),
                     ]),
                     
-                    # Category Distribution
+                    # Yearly and Monthly Analysis
+                    html.H4("📊 Temporal Analysis", className="mt-4 mb-3", id='temporal-header'),
+                    
+                    dbc.Row([
+                        dbc.Col([
+                            html.Div(id='yearly-summary-card', className="mb-4"),
+                        ], md=12),
+                    ]),
+                    
+                    html.Div(id='yearly-monthly-card', className="mb-4"),
+                    
+                    # Heatmaps Section
+                    html.H4("🔥 Heatmap Analysis", className="mt-4 mb-3", id='heatmap-header'),
+                    
+                    html.Div(id='time-weekday-heatmap-card', className="mb-4"),
+                    html.Div(id='heatmap-card', className="mb-4"),
+                    
+                    # Category and Distribution
+                    html.H4("📈 Category & Distribution Analysis", className="mt-4 mb-3", id='category-header'),
+                    
                     html.Div(id='category-card', className="mb-4"),
                     
-                    # Two Column Charts
                     dbc.Row([
                         dbc.Col([
                             html.Div(id='distribution-card', className="mb-4"),
                         ], md=6),
                         dbc.Col([
-                            html.Div(id='quarterly-card', className="mb-4"),
+                            html.Div(id='amount-range-card', className="mb-4"),
                         ], md=6),
                     ]),
                     
-                    # Heatmap
-                    html.Div(id='heatmap-card', className="mb-4"),
+                    # Growth and Trends
+                    html.H4("📈 Growth & Trend Analysis", className="mt-4 mb-3", id='growth-header'),
+                    
+                    dbc.Row([
+                        dbc.Col([
+                            html.Div(id='growth-trend-card', className="mb-4"),
+                        ], md=6),
+                        dbc.Col([
+                            html.Div(id='quarterly-card', className="mb-4"),
+                        ], md=6),
+                    ]),
                     
                     # Hourly Pattern
                     html.Div(id='hourly-card', className="mb-4"),
@@ -863,13 +1308,19 @@ def update_container_style(dark_mode):
     }
 
 @callback(
-    Output('footer-text', 'style'),
+    [Output('footer-text', 'style'),
+     Output('temporal-header', 'style'),
+     Output('heatmap-header', 'style'),
+     Output('category-header', 'style'),
+     Output('growth-header', 'style')],
     Input('dark-mode-store', 'data')
 )
-def update_footer_style(dark_mode):
-    """Update footer style based on theme."""
+def update_text_styles(dark_mode):
+    """Update text styles based on theme."""
     colors = get_theme_colors(dark_mode)
-    return {'color': colors['text_secondary']}
+    header_style = {'color': colors['text']}
+    footer_style = {'color': colors['text_secondary']}
+    return footer_style, header_style, header_style, header_style, header_style
 
 @callback(
     [Output('date-range', 'start_date'),
@@ -1030,10 +1481,15 @@ def create_chart_card(chart_fig, dark_mode):
      Output('ramadan-comparison-card', 'children'),
      Output('islamic-events-card', 'children'),
      Output('hijri-months-card', 'children'),
+     Output('yearly-summary-card', 'children'),
+     Output('yearly-monthly-card', 'children'),
+     Output('time-weekday-heatmap-card', 'children'),
+     Output('heatmap-card', 'children'),
      Output('category-card', 'children'),
      Output('distribution-card', 'children'),
+     Output('amount-range-card', 'children'),
+     Output('growth-trend-card', 'children'),
      Output('quarterly-card', 'children'),
-     Output('heatmap-card', 'children'),
      Output('hourly-card', 'children')],
     [Input('filtered-data-store', 'data'),
      Input('dark-mode-store', 'data')]
@@ -1052,10 +1508,15 @@ def update_charts(filtered_data, dark_mode):
         create_chart_card(create_ramadan_comparison_chart(filtered_df, dark_mode), dark_mode),
         create_chart_card(create_islamic_events_chart(filtered_df, dark_mode), dark_mode),
         create_chart_card(create_hijri_months_chart(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_yearly_summary(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_yearly_monthly_analysis(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_time_weekday_heatmap(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_monthly_heatmap(filtered_df, dark_mode), dark_mode),
         create_chart_card(create_category_distribution(filtered_df, 10, dark_mode), dark_mode),
         create_chart_card(create_distribution_chart(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_amount_range_distribution(filtered_df, dark_mode), dark_mode),
+        create_chart_card(create_growth_trend_analysis(filtered_df, dark_mode), dark_mode),
         create_chart_card(create_quarterly_comparison(filtered_df, dark_mode), dark_mode),
-        create_chart_card(create_monthly_heatmap(filtered_df, dark_mode), dark_mode),
         create_chart_card(create_hourly_pattern(filtered_df, dark_mode), dark_mode)
     )
 
