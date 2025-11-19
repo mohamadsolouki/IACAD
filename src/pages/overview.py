@@ -39,18 +39,15 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
     display_kpi_cards(kpis)
     
     # Additional Data Summary Metrics
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Total Records", f"{len(df):,}")
-    
-    with col2:
         st.metric("Max Donation", f"AED {df['amount'].max():,.0f}")
     
-    with col3:
+    with col2:
         st.metric("Median Donation", f"AED {df['amount'].median():,.0f}")
     
-    with col4:
+    with col3:
         st.metric("Std Deviation", f"AED {df['amount'].std():,.0f}")
     
     # Growth metrics

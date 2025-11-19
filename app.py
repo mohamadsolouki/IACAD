@@ -134,55 +134,6 @@ def render_sidebar():
         
         # Extract page name without icon
         page = page.split(" ", 1)[1]
-        
-        st.divider()
-        
-        # Data Summary (compact)
-        if 'data' in st.session_state and not st.session_state.data.empty:
-            summary = get_data_summary(st.session_state.data)
-            
-            st.markdown("**:material/analytics: Data Summary**")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Records", f"{summary['total_records']:,}", label_visibility="visible")
-            with col2:
-                st.metric("Amount", f"{summary['total_amount']/1000000:.1f}M", 
-                         label_visibility="visible",
-                         help=f"AED {summary['total_amount']:,.0f}")
-            
-            # Date range in compact format
-            if summary['date_range'][0] and summary['date_range'][1]:
-                st.caption(f":material/calendar_month: {summary['date_range'][0]} → {summary['date_range'][1]}")
-            
-            st.divider()
-            
-            # Export button (compact)
-            csv_data = export_to_csv(st.session_state.data)
-            st.download_button(
-                label=":material/download: Export CSV",
-                data=csv_data,
-                file_name="donations_data.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        
-        # Footer with version info
-        st.divider()
-        with st.expander(":material/info: About & Info"):
-            st.markdown("""
-            **UAE Donations Analytics**  
-            *Version 2.0.0*
-            
-            Comprehensive analytics platform for donation patterns and trends.
-            
-            **Features:**
-            - :material/dashboard: Interactive visualizations
-            - :material/nightlight: Ramadan analysis
-            - :material/schedule: Temporal patterns
-            - :material/group: Donor insights
-            - :material/compare: Period comparison
-            """)
     
     return page, dark_mode
 
