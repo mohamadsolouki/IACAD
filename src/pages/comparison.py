@@ -20,7 +20,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
         df: Input DataFrame
         dark_mode: Whether to use dark theme
     """
-    st.title("🔄 Period Comparison Tool")
+    st.title(":material/compare: Period Comparison Tool")
     
     if df.empty:
         st.warning("No data available to display.")
@@ -40,7 +40,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📅 Period 1")
+        st.subheader(":material/calendar_today: Period 1")
         
         period1_start = st.date_input(
             "Start Date",
@@ -59,7 +59,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
         )
     
     with col2:
-        st.subheader("📅 Period 2")
+        st.subheader(":material/calendar_today: Period 2")
         
         period2_start = st.date_input(
             "Start Date",
@@ -128,7 +128,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
     st.divider()
     
     # Comparison Results
-    st.header("📊 Comparison Results")
+    st.header(":material/analytics: Comparison Results")
     
     # Create comparison
     period1_label = f"{period1_start} to {period1_end}"
@@ -211,7 +211,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
             st.info("No data for this period")
     
     # Export Comparison
-    with st.expander("💾 Export Comparison Data"):
+    with st.expander(":material/download: Export Comparison Data"):
         st.download_button(
             label="Download Period 1 Data",
             data=df1.to_csv(index=False).encode('utf-8'),

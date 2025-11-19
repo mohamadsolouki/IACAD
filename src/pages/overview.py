@@ -104,36 +104,10 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
     # Category Analysis
     st.header("Category Analysis")
     
-    col1, col2 = st.columns(2)
+    top_n = st.slider("Number of categories to show", 5, 20, 10, key="category_slider")
     
-    with col1:
-        top_n = st.slider("Number of categories to show", 5, 20, 10, key="category_slider")
-        fig = create_category_distribution(df, top_n, dark_mode)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        fig = create_category_bar_chart(df, top_n, dark_mode)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.divider()
-    
-    # Amount Distribution
-    st.header("Amount Distribution")
-    fig = create_amount_distribution(df, dark_mode)
+    fig = create_category_distribution(df, top_n, dark_mode)
     st.plotly_chart(fig, use_container_width=True)
     
-    # Data Summary
-    with st.expander("📈 Data Summary"):
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Total Records", f"{len(df):,}")
-            st.metric("Date Range", f"{df['donationdate'].min().date()} to {df['donationdate'].max().date()}")
-        
-        with col2:
-            st.metric("Max Donation", f"AED {df['amount'].max():,.2f}")
-            st.metric("Min Donation", f"AED {df['amount'].min():,.2f}")
-        
-        with col3:
-            st.metric("Median Donation", f"AED {df['amount'].median():,.2f}")
-            st.metric("Std Deviation", f"AED {df['amount'].std():,.2f}")
+    fig = create_category_bar_chart(df, top_n, dark_mode)
+    st.plotly_chart(fig, use_container_width=True)

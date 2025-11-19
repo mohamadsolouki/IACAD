@@ -22,7 +22,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
         df: Input DataFrame
         dark_mode: Whether to use dark theme
     """
-    st.title("⏰ Temporal Analysis")
+    st.title(":material/schedule: Temporal Analysis")
     
     if df.empty:
         st.warning("No data available to display.")
@@ -97,7 +97,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
         st.plotly_chart(fig, use_container_width=True)
         
         # Hourly insights
-        with st.expander("⏱️ Hourly Insights"):
+        with st.expander(":material/access_time: Hourly Insights"):
             hourly_stats = df.groupby('hour')['amount'].agg(['sum', 'mean', 'count']).reset_index()
             hourly_stats.columns = ['Hour', 'Total Amount', 'Avg Amount', 'Count']
             
@@ -129,7 +129,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
         st.warning("Hour and weekday data not available.")
     
     # Temporal Statistics
-    with st.expander("📊 Temporal Statistics Summary"):
+    with st.expander(":material/analytics: Temporal Statistics Summary"):
         if 'year' in df.columns:
             st.subheader("Yearly Statistics")
             yearly_stats = df.groupby('year').agg({

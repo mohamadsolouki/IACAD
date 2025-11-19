@@ -22,7 +22,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
         df: Input DataFrame
         dark_mode: Whether to use dark theme
     """
-    st.title("🌙 Ramadan & Islamic Calendar Analysis")
+    st.title(":material/nightlight: Ramadan & Islamic Calendar Analysis")
     
     if df.empty:
         st.warning("No data available to display.")
@@ -45,7 +45,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
     display_ramadan_kpis(kpis)
     
     # Key insights
-    st.subheader("🔍 Key Insights")
+    st.subheader(":material/search: Key Insights")
     
     ramadan_df = df[df['is_ramadan'] == True]
     non_ramadan_df = df[df['is_ramadan'] == False]
@@ -102,7 +102,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
             st.plotly_chart(fig, use_container_width=True)
             
             # Event details table
-            with st.expander("📊 Islamic Events Details"):
+            with st.expander(":material/analytics: Islamic Events Details"):
                 event_stats = events_df.groupby('islamic_event').agg({
                     'amount': ['sum', 'mean', 'count'],
                     'id': 'nunique'
@@ -129,7 +129,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
             st.plotly_chart(fig, use_container_width=True)
             
             # Hijri month details
-            with st.expander("📊 Hijri Month Details"):
+            with st.expander(":material/analytics: Hijri Month Details"):
                 hijri_stats = hijri_df.groupby('hijri_month_name').agg({
                     'amount': ['sum', 'mean', 'count'],
                     'id': 'nunique'
@@ -145,7 +145,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
             st.info("No Hijri calendar data available in the dataset.")
     
     # Ramadan Data Explorer
-    with st.expander("🔍 Ramadan Data Explorer"):
+    with st.expander(":material/search: Ramadan Data Explorer"):
         st.subheader("Ramadan Donations Sample")
         
         display_cols = ['donationdate', 'amount', 'donationtype']

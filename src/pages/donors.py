@@ -17,7 +17,7 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
         df: Input DataFrame
         dark_mode: Whether to use dark theme
     """
-    st.title("👥 Donor Analysis")
+    st.title(":material/group: Donor Analysis")
     
     if df.empty:
         st.warning("No data available to display.")
@@ -61,7 +61,7 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
     st.plotly_chart(fig, use_container_width=True)
     
     # Top Donors Table
-    with st.expander("📊 Top Donors Details"):
+    with st.expander(":material/analytics: Top Donors Details"):
         top_donors_df = get_top_donors(df, top_n)
         
         if not top_donors_df.empty:
@@ -78,7 +78,7 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
     st.divider()
     
     # Donor Deep Dive
-    with st.expander("🔍 Donor Deep Dive"):
+    with st.expander(":material/search: Donor Deep Dive"):
         st.subheader("Donor Statistics by Category")
         
         if 'donationtype' in df.columns:
