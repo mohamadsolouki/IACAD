@@ -20,7 +20,7 @@ def display_kpi_cards(kpis: dict, col_count: int = 4):
         return
     
     # First row - Main metrics
-    cols = st.columns(col_count)
+    cols = st.columns(3)
     
     with cols[0]:
         st.metric(
@@ -40,13 +40,6 @@ def display_kpi_cards(kpis: dict, col_count: int = 4):
         st.metric(
             label="Average Donation",
             value=f"AED {kpis['avg_donation']:,.2f}",
-            delta=None
-        )
-    
-    with cols[3]:
-        st.metric(
-            label="Unique Donors",
-            value=f"{kpis['unique_donors']:,}",
             delta=None
         )
 
