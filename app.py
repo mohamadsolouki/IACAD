@@ -42,37 +42,63 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================================
 
-def load_custom_css():
+def load_custom_css(dark_mode: bool = False):
     """Load custom CSS for better styling."""
-    st.markdown("""
+    bg_color = "#0e1117" if dark_mode else "#ffffff"
+    text_color = "#fafafa" if dark_mode else "#0e1117"
+    sidebar_bg = "#1e1e1e" if dark_mode else "#f5f5f5"
+    card_bg = "#262730" if dark_mode else "#ffffff"
+    border_color = "#3a3a3a" if dark_mode else "#e6e6e6"
+    
+    st.markdown(f"""
     <style>
-        /* Main title styling */
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Metric card styling */
-        [data-testid="stMetricValue"] {
-            font-size: 1.8rem;
-        }
+        /* Main app background */
+        .stApp {{
+            background-color: {bg_color};
+            color: {text_color};
+        }}
         
         /* Sidebar styling */
-        .sidebar .sidebar-content {
-            background-color: #f8f9fa;
-        }
+        [data-testid="stSidebar"] {{
+            background-color: {sidebar_bg};
+        }}
+        
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
+            color: {text_color};
+        }}
+        
+        /* Metric card styling */
+        [data-testid="stMetricValue"] {{
+            font-size: 1.8rem;
+            color: {text_color};
+        }}
+        
+        [data-testid="stMetricLabel"] {{
+            color: {text_color};
+        }}
         
         /* Hide Streamlit branding */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
         
-        /* Custom info boxes */
-        .info-box {
-            padding: 1rem;
+        /* Compact metric styling */
+        div[data-testid="stMetric"] {{
+            background-color: {card_bg};
+            padding: 0.8rem;
             border-radius: 0.5rem;
-            margin: 1rem 0;
-        }
+            border: 1px solid {border_color};
+        }}
+        
+        /* Radio button styling */
+        div[role="radiogroup"] label {{
+            padding: 0.4rem 0;
+        }}
+        
+        /* Divider styling */
+        hr {{
+            margin: 0.8rem 0;
+            border-color: {border_color};
+        }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -83,78 +109,79 @@ def load_custom_css():
 def render_sidebar():
     """Render the sidebar with navigation and filters."""
     with st.sidebar:
-        st.title(f"{APP_ICON} {APP_TITLE}")
-        st.markdown("---")
+        # App Title
+        st.markdown(f"### {APP_ICON} {APP_TITLE}")
+        
+        # Theme Toggle (at top for easy access)
+        dark_mode = st.toggle(":material/dark_mode: Dark Mode", value=st.session_state.get('dark_mode', False))
+        
+        st.divider()
         
         # Navigation
-        st.header("📍 Navigation")
+        st.markdown("**:material/menu: Navigation**")
         page = st.radio(
             "Select Page",
             options=[
-                "Overview",
-                "Ramadan Analysis",
-                "Temporal Analysis",
-                "Donor Analysis",
-                "Comparison Tool"
+                ":material/dashboard: Overview",
+                ":material/nightlight: Ramadan Analysis",
+                ":material/schedule: Temporal Analysis",
+                ":material/group: Donor Analysis",
+                ":material/compare: Comparison Tool"
             ],
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="nav_radio"
         )
         
-        st.markdown("---")
+        # Extract page name without icon
+        page = page.split(" ", 1)[1]
         
-        # Theme Toggle
-        st.header("🎨 Theme")
-        dark_mode = st.toggle("Dark Mode", value=False)
+        st.divider()
         
-        st.markdown("---")
-        
-        # Data Info
-        st.header("ℹ️ Data Information")
-        
+        # Data Summary (compact)
         if 'data' in st.session_state and not st.session_state.data.empty:
             summary = get_data_summary(st.session_state.data)
             
-            st.metric("Total Records", f"{summary['total_records']:,}")
+            st.markdown("**:material/analytics: Data Summary**")
             
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Records", f"{summary['total_records']:,}", label_visibility="visible")
+            with col2:
+                st.metric("Amount", f"{summary['total_amount']/1000000:.1f}M", 
+                         label_visibility="visible",
+                         help=f"AED {summary['total_amount']:,.0f}")
+            
+            # Date range in compact format
             if summary['date_range'][0] and summary['date_range'][1]:
-                st.text(f"From: {summary['date_range'][0]}")
-                st.text(f"To: {summary['date_range'][1]}")
+                st.caption(f":material/calendar_month: {summary['date_range'][0]} → {summary['date_range'][1]}")
             
-            st.metric("Total Amount", f"AED {summary['total_amount']:,.0f}")
+            st.divider()
             
-            # Data export
-            st.markdown("---")
-            st.header("💾 Export Data")
-            
+            # Export button (compact)
             csv_data = export_to_csv(st.session_state.data)
             st.download_button(
-                label="Download CSV",
+                label=":material/download: Export CSV",
                 data=csv_data,
                 file_name="donations_data.csv",
                 mime="text/csv",
                 use_container_width=True
             )
-        else:
-            st.info("Load data to see information")
         
-        st.markdown("---")
-        
-        # About
-        with st.expander("ℹ️ About"):
+        # Footer with version info
+        st.divider()
+        with st.expander(":material/info: About & Info"):
             st.markdown("""
-            **UAE Donations Analytics Dashboard**
+            **UAE Donations Analytics**  
+            *Version 2.0.0*
             
-            Version 2.0.0
+            Comprehensive analytics platform for donation patterns and trends.
             
-            A comprehensive analytics platform for 
-            understanding donation patterns and trends.
-            
-            Features:
-            - Interactive visualizations
-            - Ramadan analysis
-            - Temporal patterns
-            - Donor insights
-            - Period comparison
+            **Features:**
+            - :material/dashboard: Interactive visualizations
+            - :material/nightlight: Ramadan analysis
+            - :material/schedule: Temporal patterns
+            - :material/group: Donor insights
+            - :material/compare: Period comparison
             """)
     
     return page, dark_mode
@@ -166,12 +193,11 @@ def render_sidebar():
 def main():
     """Main application entry point."""
     
-    # Load custom CSS
-    load_custom_css()
-    
     # Initialize session state
     if 'data' not in st.session_state:
         st.session_state.data = None
+    if 'dark_mode' not in st.session_state:
+        st.session_state.dark_mode = False
     
     # Load data
     if st.session_state.data is None:
@@ -179,6 +205,17 @@ def main():
             st.session_state.data = load_data()
     
     df = st.session_state.data
+    
+    # Render sidebar and get navigation
+    page, dark_mode = render_sidebar()
+    
+    # Update dark mode in session state
+    if dark_mode != st.session_state.dark_mode:
+        st.session_state.dark_mode = dark_mode
+        st.rerun()
+    
+    # Load custom CSS with dark mode
+    load_custom_css(dark_mode)
     
     # Check if data loaded successfully
     if df.empty:
@@ -194,12 +231,6 @@ def main():
         ```
         """)
         return
-    
-    # Render sidebar and get navigation
-    page, dark_mode = render_sidebar()
-    
-    # Store theme in session state
-    st.session_state.dark_mode = dark_mode
     
     # Route to appropriate page
     if page == "Overview":

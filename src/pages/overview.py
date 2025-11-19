@@ -27,16 +27,31 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
         df: Input DataFrame
         dark_mode: Whether to use dark theme
     """
-    st.title("📊 Dashboard Overview")
+    st.title(":material/dashboard: Dashboard Overview")
     
     if df.empty:
         st.warning("No data available to display.")
         return
     
-    # KPIs Section
-    st.header("Key Performance Indicators")
+    # KPIs Section with Data Summary
+    st.header("Key Performance Indicators & Data Summary")
     kpis = calculate_kpis(df)
     display_kpi_cards(kpis)
+    
+    # Additional Data Summary Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Records", f"{len(df):,}")
+    
+    with col2:
+        st.metric("Max Donation", f"AED {df['amount'].max():,.0f}")
+    
+    with col3:
+        st.metric("Median Donation", f"AED {df['amount'].median():,.0f}")
+    
+    with col4:
+        st.metric("Std Deviation", f"AED {df['amount'].std():,.0f}")
     
     # Growth metrics
     st.subheader("Growth Metrics")
@@ -62,7 +77,7 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
     
     # Ramadan Highlights
     if 'is_ramadan' in df.columns and df['is_ramadan'].sum() > 0:
-        st.header("🌙 Ramadan Highlights")
+        st.header(":material/nightlight: Ramadan Highlights")
         display_ramadan_kpis(kpis)
         st.divider()
     
