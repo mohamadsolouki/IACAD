@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from scipy import stats
 from pathlib import Path
+from io import StringIO
 
 # ============================================================================
 # CONFIGURATION
@@ -76,7 +77,7 @@ def load_and_process_data(file_path: Path) -> pd.DataFrame:
             # Try to load raw data as fallback
             if RAW_DATA_PATH.exists():
                 print(f"Loading raw data from {RAW_DATA_PATH} as fallback...")
-                df = pd.read_csv(RAW_DATA_PATH)
+                df = pd.read_csv(RAW_DATA_PATH, encoding='utf-8')
                 df['donationdate'] = pd.to_datetime(df['donationdate'], errors='coerce')
                 df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
                 df = df.dropna(subset=['donationdate', 'amount'])
@@ -107,11 +108,16 @@ def load_and_process_data(file_path: Path) -> pd.DataFrame:
         
         # Load processed data
         print(f"Loading preprocessed data from {file_path}...")
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path, encoding='utf-8')
         
         # Convert date columns
-        df['donationdate'] = pd.to_datetime(df['donationdate'])
-        df['date'] = pd.to_datetime(df['date']).dt.date
+        df['donationdate'] = pd.to_datetime(df['donationdate'], errors='coerce')
+        
+        # Drop rows with invalid dates
+        df = df.dropna(subset=['donationdate'])
+        
+        # Create date column (date only, no time)
+        df['date'] = df['donationdate'].dt.date
         
         print(f"✓ Loaded {len(df):,} preprocessed records")
         print(f"✓ Ramadan donations: {df['is_ramadan'].sum():,} ({df['is_ramadan'].sum() / len(df) * 100:.1f}%)")
@@ -858,7 +864,7 @@ def create_amount_range_distribution(df: pd.DataFrame, dark_mode: bool = False) 
         labels=['0-20', '21-50', '51-100', '101-200', '201-500', '501-1000', '1000+']
     )
     
-    range_summary = df_copy.groupby('amount_range').agg({
+    range_summary = df_copy.groupby('amount_range', observed=False).agg({
         'amount': ['sum', 'count']
     }).reset_index()
     
@@ -1048,7 +1054,10 @@ def create_filter_section(dark_mode: bool = False) -> dbc.Card:
         'background-color': colors['card_bg'],
         'border': f"1px solid {colors['border']}",
         'box-shadow': f"0 2px 8px {colors['shadow']}",
-        'color': colors['text']
+        'color': colors['text'],
+        'position': 'sticky',
+        'top': '20px',
+        'z-index': '100'
     }
     
     return dbc.Card([
@@ -1162,20 +1171,37 @@ server = app.server
 app.layout = html.Div([
     dcc.Store(id='dark-mode-store', data=False),
     dcc.Store(id='filtered-data-store'),
+    dcc.Store(id='comparison-period-1', data=None),
+    dcc.Store(id='comparison-period-2', data=None),
     
     html.Div([
         create_navbar(),
         
         dbc.Container([
-            # KPI Cards Row
-            html.Div(id='kpi-cards', className="mb-4"),
+            # Tabs for different pages
+            dbc.Tabs([
+                dbc.Tab(label="📊 Dashboard", tab_id="dashboard"),
+                dbc.Tab(label="🔄 Compare", tab_id="compare"),
+            ], id="page-tabs", active_tab="dashboard", className="mb-4"),
             
-            # Main Content
-            dbc.Row([
-                # Filters Column
-                dbc.Col([
-                    html.Div(id='filter-section')
-                ], md=3),
+            html.Div(id='page-content')
+            
+        ], fluid=True, id='main-container'),
+    ], id='app-container')
+])
+
+# Dashboard page layout
+def create_dashboard_layout():
+    return html.Div([
+        # KPI Cards Row
+        html.Div(id='kpi-cards', className="mb-4"),
+        
+        # Main Content
+        dbc.Row([
+            # Filters Column
+            dbc.Col([
+                html.Div(id='filter-section')
+            ], md=3),
                 
                 # Charts Column
                 dbc.Col([
@@ -1259,14 +1285,79 @@ app.layout = html.Div([
                     html.Span(id='last-updated')
                 ], className="text-center", id='footer-text')
             ], className="mt-4 mb-3")
-            
-        ], fluid=True, id='main-container'),
-    ], id='app-container')
-])
+        ])
+
+# Comparison page layout
+def create_comparison_layout():
+    return html.Div([
+        html.H3("🔄 Compare Periods", className="mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Period 1"),
+                    dbc.CardBody([
+                        html.Label("Select Date Range", className="fw-bold mb-2"),
+                        dcc.DatePickerRange(
+                            id='compare-date-range-1',
+                            display_format='YYYY-MM-DD',
+                            style={'width': '100%'}
+                        ),
+                        html.Label("Donation Type", className="fw-bold mb-2 mt-3"),
+                        dcc.Dropdown(
+                            id='compare-donation-type-1',
+                            options=[],
+                            multi=True,
+                            placeholder="All Types",
+                        ),
+                    ])
+                ], className="mb-3")
+            ], md=6),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Period 2"),
+                    dbc.CardBody([
+                        html.Label("Select Date Range", className="fw-bold mb-2"),
+                        dcc.DatePickerRange(
+                            id='compare-date-range-2',
+                            display_format='YYYY-MM-DD',
+                            style={'width': '100%'}
+                        ),
+                        html.Label("Donation Type", className="fw-bold mb-2 mt-3"),
+                        dcc.Dropdown(
+                            id='compare-donation-type-2',
+                            options=[],
+                            multi=True,
+                            placeholder="All Types",
+                        ),
+                    ])
+                ], className="mb-3")
+            ], md=6),
+        ]),
+        
+        dbc.Row([
+            dbc.Col([
+                dbc.Button("Compare", id="compare-button", color="primary", className="w-100 mb-4"),
+            ], md=12),
+        ]),
+        
+        # Comparison Results
+        html.Div(id='comparison-results')
+    ])
 
 # ============================================================================
 # CALLBACKS
 # ============================================================================
+
+@callback(
+    Output('page-content', 'children'),
+    Input('page-tabs', 'active_tab')
+)
+def render_page_content(active_tab):
+    """Render page content based on active tab."""
+    if active_tab == "compare":
+        return create_comparison_layout()
+    else:
+        return create_dashboard_layout()
 
 @callback(
     [Output('dark-mode-store', 'data'),
@@ -1326,27 +1417,37 @@ def update_text_styles(dark_mode):
     [Output('date-range', 'start_date'),
      Output('date-range', 'end_date'),
      Output('donation-type-filter', 'options'),
+     Output('donation-type-filter', 'value'),
      Output('amount-range', 'min'),
      Output('amount-range', 'max'),
-     Output('amount-range', 'value')],
+     Output('amount-range', 'value'),
+     Output('ramadan-filter', 'value')],
     Input('reset-filters', 'n_clicks'),
     prevent_initial_call=False
 )
 def initialize_filters(n_clicks):
     """Initialize filter values."""
-    start_date = df['donationdate'].min().date()
-    end_date = df['donationdate'].max().date()
-    
-    # Use English translations if available
-    if 'donationtype_en' in df.columns:
-        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype_en'].unique()) if pd.notna(dt)]
-    else:
-        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype'].unique())]
-    
-    amount_min = float(df['amount'].min())
-    amount_max = float(df['amount'].max())
-    
-    return start_date, end_date, donation_types, amount_min, amount_max, [amount_min, amount_max]
+    try:
+        start_date = df['donationdate'].min().date()
+        end_date = df['donationdate'].max().date()
+        
+        # Use English translations if available
+        if 'donationtype_en' in df.columns and df['donationtype_en'].notna().any():
+            unique_types = df['donationtype_en'].dropna().unique()
+            donation_types = [{'label': str(dt), 'value': str(dt)} for dt in sorted(unique_types)]
+        else:
+            unique_types = df['donationtype'].dropna().unique()
+            donation_types = [{'label': str(dt), 'value': str(dt)} for dt in sorted(unique_types)]
+        
+        amount_min = float(df['amount'].min())
+        amount_max = float(df['amount'].max())
+        
+        return start_date, end_date, donation_types, None, amount_min, amount_max, [amount_min, amount_max], []
+    except Exception as e:
+        print(f"Error initializing filters: {e}")
+        import datetime
+        today = datetime.date.today()
+        return today, today, [], None, 0, 1000, [0, 1000], []
 
 @callback(
     Output('filtered-data-store', 'data'),
@@ -1361,6 +1462,13 @@ def initialize_filters(n_clicks):
 )
 def filter_data(apply_clicks, reset_clicks, start_date, end_date, donation_types, amount_range, ramadan_filter):
     """Filter data based on user selections."""
+    from dash import ctx
+    
+    # Check which button was clicked
+    if ctx.triggered_id == 'reset-filters':
+        # Return full dataset on reset
+        return df.to_json(date_format='iso', orient='split')
+    
     filtered_df = df.copy()
     
     if start_date and end_date:
@@ -1405,7 +1513,7 @@ def update_kpi_cards(filtered_data, dark_mode):
     if filtered_data is None:
         filtered_df = df
     else:
-        filtered_df = pd.read_json(filtered_data, orient='split')
+        filtered_df = pd.read_json(StringIO(filtered_data), orient='split')
         filtered_df['donationdate'] = pd.to_datetime(filtered_df['donationdate'])
     
     kpis = calculate_kpis(filtered_df)
@@ -1499,7 +1607,7 @@ def update_charts(filtered_data, dark_mode):
     if filtered_data is None:
         filtered_df = df
     else:
-        filtered_df = pd.read_json(filtered_data, orient='split')
+        filtered_df = pd.read_json(StringIO(filtered_data), orient='split')
         filtered_df['donationdate'] = pd.to_datetime(filtered_df['donationdate'])
         filtered_df['date'] = filtered_df['donationdate'].dt.date
     
@@ -1530,12 +1638,148 @@ def update_footer(filtered_data):
     if filtered_data is None:
         record_count = len(df)
     else:
-        filtered_df = pd.read_json(filtered_data, orient='split')
+        filtered_df = pd.read_json(StringIO(filtered_data), orient='split')
         record_count = len(filtered_df)
     
     last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     return f"{record_count:,} records", last_updated
+
+# ============================================================================
+# COMPARISON PAGE CALLBACKS
+# ============================================================================
+
+@callback(
+    [Output('compare-date-range-1', 'start_date'),
+     Output('compare-date-range-1', 'end_date'),
+     Output('compare-date-range-2', 'start_date'),
+     Output('compare-date-range-2', 'end_date'),
+     Output('compare-donation-type-1', 'options'),
+     Output('compare-donation-type-2', 'options')],
+    Input('page-tabs', 'active_tab')
+)
+def initialize_comparison_filters(active_tab):
+    """Initialize comparison filters."""
+    if active_tab != "compare":
+        return None, None, None, None, [], []
+    
+    # Get date range
+    start_date = df['donationdate'].min().date()
+    end_date = df['donationdate'].max().date()
+    mid_date = start_date + (end_date - start_date) / 2
+    
+    # Use English translations if available
+    if 'donationtype_en' in df.columns:
+        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype_en'].unique()) if pd.notna(dt)]
+    else:
+        donation_types = [{'label': dt, 'value': dt} for dt in sorted(df['donationtype'].unique())]
+    
+    return start_date, mid_date, mid_date, end_date, donation_types, donation_types
+
+@callback(
+    Output('comparison-results', 'children'),
+    Input('compare-button', 'n_clicks'),
+    [State('compare-date-range-1', 'start_date'),
+     State('compare-date-range-1', 'end_date'),
+     State('compare-donation-type-1', 'value'),
+     State('compare-date-range-2', 'start_date'),
+     State('compare-date-range-2', 'end_date'),
+     State('compare-donation-type-2', 'value'),
+     State('dark-mode-store', 'data')],
+    prevent_initial_call=True
+)
+def compare_periods(n_clicks, start1, end1, types1, start2, end2, types2, dark_mode):
+    """Compare two time periods."""
+    if not all([start1, end1, start2, end2]):
+        return html.Div("Please select date ranges for both periods.", className="alert alert-warning")
+    
+    # Filter data for period 1
+    df1 = df[(df['donationdate'] >= start1) & (df['donationdate'] <= end1)].copy()
+    if types1:
+        col = 'donationtype_en' if 'donationtype_en' in df.columns else 'donationtype'
+        df1 = df1[df1[col].isin(types1)]
+    
+    # Filter data for period 2
+    df2 = df[(df['donationdate'] >= start2) & (df['donationdate'] <= end2)].copy()
+    if types2:
+        col = 'donationtype_en' if 'donationtype_en' in df.columns else 'donationtype'
+        df2 = df2[df2[col].isin(types2)]
+    
+    # Calculate metrics
+    kpis1 = calculate_kpis(df1)
+    kpis2 = calculate_kpis(df2)
+    
+    colors = get_theme_colors(dark_mode)
+    chart_colors = get_chart_colors(dark_mode)
+    
+    # Create comparison visualization
+    metrics = ['total_donations', 'total_amount', 'avg_donation', 'ramadan_donations', 'ramadan_amount']
+    metric_labels = ['Total Donations', 'Total Amount (AED)', 'Avg Donation (AED)', 'Ramadan Donations', 'Ramadan Amount (AED)']
+    
+    period1_values = [kpis1[m] for m in metrics]
+    period2_values = [kpis2[m] for m in metrics]
+    
+    fig = go.Figure(data=[
+        go.Bar(name=f'Period 1 ({start1} to {end1})', x=metric_labels, y=period1_values, marker_color=chart_colors[0]),
+        go.Bar(name=f'Period 2 ({start2} to {end2})', x=metric_labels, y=period2_values, marker_color=chart_colors[1])
+    ])
+    
+    fig.update_layout(
+        title='Period Comparison',
+        barmode='group',
+        template=get_plot_template(dark_mode),
+        height=500,
+        xaxis_tickangle=-45
+    )
+    
+    # Calculate percentage changes
+    changes = []
+    for i, metric in enumerate(metrics):
+        val1 = kpis1[metric]
+        val2 = kpis2[metric]
+        if val1 > 0:
+            change = ((val2 - val1) / val1) * 100
+            changes.append({
+                'metric': metric_labels[i],
+                'period1': f"{val1:,.2f}" if metric in ['avg_donation'] else f"{val1:,.0f}",
+                'period2': f"{val2:,.2f}" if metric in ['avg_donation'] else f"{val2:,.0f}",
+                'change': f"{change:+.1f}%",
+                'color': colors['success'] if change > 0 else colors['danger']
+            })
+    
+    # Create comparison table
+    table = dbc.Table([
+        html.Thead([
+            html.Tr([
+                html.Th("Metric"),
+                html.Th("Period 1"),
+                html.Th("Period 2"),
+                html.Th("Change"),
+            ])
+        ]),
+        html.Tbody([
+            html.Tr([
+                html.Td(change['metric']),
+                html.Td(change['period1']),
+                html.Td(change['period2']),
+                html.Td(change['change'], style={'color': change['color'], 'font-weight': 'bold'}),
+            ]) for change in changes
+        ])
+    ], bordered=True, hover=True, responsive=True, className="mb-4")
+    
+    return html.Div([
+        create_chart_card(fig, dark_mode),
+        html.H4("Detailed Comparison", className="mt-4 mb-3"),
+        table,
+        dbc.Row([
+            dbc.Col([
+                create_chart_card(create_category_distribution(df1, 10, dark_mode), dark_mode),
+            ], md=6),
+            dbc.Col([
+                create_chart_card(create_category_distribution(df2, 10, dark_mode), dark_mode),
+            ], md=6),
+        ]),
+    ])
 
 # ============================================================================
 # RUN APP

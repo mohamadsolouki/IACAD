@@ -144,7 +144,7 @@ def process_donation_data():
     
     # Load raw data
     print(f"\n[1/5] Loading raw data from {INPUT_FILE}...")
-    df = pd.read_csv(INPUT_FILE)
+    df = pd.read_csv(INPUT_FILE, encoding='utf-8')
     print(f"   ✓ Loaded {len(df):,} records")
     
     # Convert and validate data types
@@ -158,6 +158,14 @@ def process_donation_data():
     after_clean = len(df)
     print(f"   ✓ Removed {before_clean - after_clean:,} invalid records")
     print(f"   ✓ {after_clean:,} valid records remaining")
+    
+    # Filter out incomplete years (2018 and 2025)
+    df['year'] = df['donationdate'].dt.year
+    before_filter = len(df)
+    df = df[(df['year'] >= 2019) & (df['year'] <= 2024)]
+    after_filter = len(df)
+    print(f"   ✓ Filtered out {before_filter - after_filter:,} records from incomplete years (2018, 2025)")
+    print(f"   ✓ {after_filter:,} records from complete years (2019-2024) remaining")
     
     # Extract time dimensions
     print("\n[3/5] Extracting time dimensions...")
@@ -258,7 +266,7 @@ def process_donation_data():
     # Save processed data
     print(f"\n[6/6] Saving processed data to {OUTPUT_FILE}...")
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(OUTPUT_FILE, index=False)
+    df.to_csv(OUTPUT_FILE, index=False, encoding='utf-8-sig')
     print(f"   ✓ Saved {len(df):,} processed records")
     
     # Display summary statistics
@@ -270,8 +278,8 @@ def process_donation_data():
     print(f"Total Amount:            AED {df['amount'].sum():,.2f}")
     print(f"Average Donation:        AED {df['amount'].mean():,.2f}")
     print(f"\nRamadan Donations:       {ramadan_count:,} ({ramadan_pct:.1f}%)")
-    print(f"Ramadan Amount:          AED {df[df['is_ramadan']]['amount'].sum():,.2f}")
-    print(f"Non-Ramadan Amount:      AED {df[~df['is_ramadan']]['amount'].sum():,.2f}")
+    print(f"Ramadan Amount:          AED {df[df['is_ramadan'] == True]['amount'].sum():,.2f}")
+    print(f"Non-Ramadan Amount:      AED {df[df['is_ramadan'] == False]['amount'].sum():,.2f}")
     print(f"\nUnique Donation Types:   {df['donationtype'].nunique()}")
     print(f"Unique Donors:           {df['id'].nunique():,}")
     
