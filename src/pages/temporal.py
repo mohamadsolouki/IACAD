@@ -101,8 +101,8 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
             hourly_stats = df.groupby('hour')['amount'].agg(['sum', 'mean', 'count']).reset_index()
             hourly_stats.columns = ['Hour', 'Total Amount', 'Avg Amount', 'Count']
             
-            peak_hour = hourly_stats.nlargest(1, 'Total Amount')['Hour'].values[0]
-            peak_count_hour = hourly_stats.nlargest(1, 'Count')['Hour'].values[0]
+            peak_hour = int(hourly_stats.nlargest(1, 'Total Amount')['Hour'].values[0])
+            peak_count_hour = int(hourly_stats.nlargest(1, 'Count')['Hour'].values[0])
             
             col1, col2 = st.columns(2)
             

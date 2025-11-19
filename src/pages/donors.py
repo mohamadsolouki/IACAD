@@ -6,12 +6,7 @@ Detailed donor behavior and segmentation analysis
 import streamlit as st
 import pandas as pd
 from ..services.metrics_service import calculate_donor_statistics, get_top_donors
-from ..components.donor_charts import (
-    create_top_donors_chart,
-    create_donor_behavior_analysis,
-    create_donor_retention_chart,
-    create_donation_frequency_distribution
-)
+from ..components.donor_charts import create_top_donors_chart
 
 
 def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
@@ -41,7 +36,7 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
     
     donor_stats = calculate_donor_statistics(df)
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2 = st.columns(2)
     
     with col1:
         st.metric(
@@ -51,22 +46,8 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
     
     with col2:
         st.metric(
-            label="Repeat Donors",
-            value=f"{donor_stats['repeat_donors']:,}",
-            delta=f"{(donor_stats['repeat_donors'] / donor_stats['total_donors'] * 100) if donor_stats['total_donors'] > 0 else 0:.1f}%"
-        )
-    
-    with col3:
-        st.metric(
-            label="One-Time Donors",
-            value=f"{donor_stats['one_time_donors']:,}",
-            delta=f"{(donor_stats['one_time_donors'] / donor_stats['total_donors'] * 100) if donor_stats['total_donors'] > 0 else 0:.1f}%"
-        )
-    
-    with col4:
-        st.metric(
-            label="Avg Donations/Donor",
-            value=f"{donor_stats['avg_donations_per_donor']:.1f}"
+            label="Total Donations",
+            value=f"{len(df):,}"
         )
     
     st.divider()
@@ -95,65 +76,6 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
             st.dataframe(display_df, use_container_width=True, hide_index=True)
     
     st.divider()
-    
-    # Donor Behavior Segmentation
-    st.header("Donor Behavior Segmentation")
-    
-    fig = create_donor_behavior_analysis(df, dark_mode)
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Segmentation insights
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Segment Definitions")
-        st.markdown("""
-        - **One-time**: 1 donation
-        - **Occasional**: 2-4 donations
-        - **Regular**: 5-9 donations
-        - **Frequent**: 10+ donations
-        """)
-    
-    with col2:
-        st.subheader("Key Insights")
-        
-        donor_counts = df.groupby('id').size()
-        repeat_rate = (donor_counts > 1).sum() / len(donor_counts) * 100
-        
-        st.info(f"""
-        **Repeat Donor Rate**: {repeat_rate:.1f}%
-        
-        {repeat_rate:.1f}% of donors have made multiple donations, 
-        indicating {"strong" if repeat_rate > 30 else "moderate" if repeat_rate > 15 else "developing"} donor retention.
-        """)
-    
-    st.divider()
-    
-    # Donation Frequency Distribution
-    st.header("Donation Frequency Distribution")
-    
-    fig = create_donation_frequency_distribution(df, dark_mode)
-    st.plotly_chart(fig, use_container_width=True)
-    
-    st.divider()
-    
-    # Donor Retention Over Time
-    if 'year' in df.columns:
-        st.header("Donor Retention Over Time")
-        
-        fig = create_donor_retention_chart(df, dark_mode)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Year-over-year retention analysis
-        with st.expander("📈 Year-over-Year Retention Analysis"):
-            yearly_donors = df.groupby('year')['id'].nunique().reset_index()
-            yearly_donors.columns = ['Year', 'Unique Donors']
-            
-            # Calculate growth
-            yearly_donors['Growth'] = yearly_donors['Unique Donors'].pct_change() * 100
-            yearly_donors['Growth'] = yearly_donors['Growth'].apply(lambda x: f"{x:+.1f}%" if pd.notna(x) else "N/A")
-            
-            st.dataframe(yearly_donors, use_container_width=True, hide_index=True)
     
     # Donor Deep Dive
     with st.expander("🔍 Donor Deep Dive"):
