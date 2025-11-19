@@ -28,12 +28,30 @@ def create_category_distribution(
     """
     column = 'donationtype_en' if 'donationtype_en' in df.columns else 'donationtype'
     
-    category_data = df.groupby(column)['amount'].sum().nlargest(top_n).reset_index()
+    # Get all category data
+    all_category_data = df.groupby(column)['amount'].sum().sort_values(ascending=False)
+    
+    # Get top N categories
+    top_categories = all_category_data.head(top_n)
+    
+    # Calculate "Others" if there are more categories
+    if len(all_category_data) > top_n:
+        others_amount = all_category_data.iloc[top_n:].sum()
+        # Combine top categories with "Others"
+        category_data = pd.concat([
+            top_categories,
+            pd.Series({'Others': others_amount})
+        ])
+    else:
+        category_data = top_categories
+    
+    category_data = category_data.reset_index()
+    category_data.columns = ['category', 'amount']
     
     colors = get_chart_colors(dark_mode)
     
     fig = go.Figure(data=[go.Pie(
-        labels=category_data[column],
+        labels=category_data['category'],
         values=category_data['amount'],
         marker=dict(colors=colors),
         textinfo='label+percent',
@@ -41,7 +59,7 @@ def create_category_distribution(
     )])
     
     fig.update_layout(
-        title=f"Top {top_n} Donation Categories",
+        title=f"Top {top_n} Donation Categories + Others",
         template=get_plot_template(dark_mode),
         height=DEFAULT_CHART_HEIGHT
     )
