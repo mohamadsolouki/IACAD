@@ -1,8 +1,18 @@
+# Core Dependencies
 pandas>=2.0.0
-plotly>=5.14.0
-dash>=2.14.0
-dash-bootstrap-components>=1.5.0
 numpy>=1.24.0
+
+# Streamlit
+streamlit>=1.28.0
+
+# Visualization
+plotly>=5.14.0
+
+# Analytics
 scipy>=1.11.0
+
+# Islamic Calendar
 hijri-converter>=2.3.0
+
+# Translation
 deep-translator>=1.11.0
