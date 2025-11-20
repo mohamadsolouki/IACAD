@@ -112,7 +112,6 @@ Use the sidebar to navigate between different sections:
 
 ### Features
 
-- **Dark Mode**: Toggle between light and dark themes
 - **Interactive Charts**: Hover, zoom, and pan on all visualizations
 - **Data Export**: Download filtered data as CSV
 - **Responsive Design**: Works on desktop and mobile devices
@@ -194,7 +193,6 @@ Edit `src/config/settings.py` to customize:
 Edit `src/config/theme.py` to customize:
 - Color schemes
 - Chart colors
-- Light/dark themes
 
 ### Streamlit Config
 
@@ -213,7 +211,7 @@ The modular architecture makes it easy to extend:
    ```python
    import streamlit as st
    
-   def render_my_page(df, dark_mode=False):
+   def render_my_page(df):
        st.title("My New Page")
        # Your page code here
    ```
@@ -226,7 +224,7 @@ The modular architecture makes it easy to extend:
 3. Add to navigation in `app.py`:
    ```python
    elif page == "My Page":
-       render_my_page(df, dark_mode)
+       render_my_page(df)
    ```
 
 ### Add a New Chart

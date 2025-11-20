@@ -10,13 +10,12 @@ from ..config.theme import get_theme_colors, get_plot_template, get_chart_colors
 from ..config.settings import DEFAULT_CHART_HEIGHT, HEATMAP_HEIGHT
 
 
-def create_monthly_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_monthly_heatmap(df: pd.DataFrame) -> go.Figure:
     """
     Create monthly donation heatmap.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -34,7 +33,7 @@ def create_monthly_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
                    'July', 'August', 'September', 'October', 'November', 'December']
     heatmap_data = heatmap_data.reindex([m for m in month_order if m in heatmap_data.index])
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure(data=go.Heatmap(
         z=heatmap_data.values,
@@ -51,20 +50,19 @@ def create_monthly_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
         title="Monthly Donation Heatmap (AED)",
         xaxis_title="Year",
         yaxis_title="Month",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=HEATMAP_HEIGHT
     )
     
     return fig
 
 
-def create_hourly_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_hourly_pattern(df: pd.DataFrame) -> go.Figure:
     """
     Create hourly donation pattern chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -79,7 +77,7 @@ def create_hourly_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figur
     
     hourly_data.columns = ['hour', 'total_amount', 'count']
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -95,7 +93,7 @@ def create_hourly_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figur
         title="Donations by Hour of Day",
         xaxis_title="Hour (24-hour format)",
         yaxis_title="Total Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     
@@ -104,13 +102,12 @@ def create_hourly_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figur
     return fig
 
 
-def create_weekday_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_weekday_pattern(df: pd.DataFrame) -> go.Figure:
     """
     Create weekday donation pattern chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -129,7 +126,7 @@ def create_weekday_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
     weekday_data['weekday'] = pd.Categorical(weekday_data['weekday'], categories=weekday_order, ordered=True)
     weekday_data = weekday_data.sort_values('weekday')
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = go.Figure()
     
@@ -148,20 +145,19 @@ def create_weekday_pattern(df: pd.DataFrame, dark_mode: bool = False) -> go.Figu
         title="Donations by Day of Week",
         xaxis_title="Day of Week",
         yaxis_title="Total Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     
     return fig
 
 
-def create_time_weekday_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_time_weekday_heatmap(df: pd.DataFrame) -> go.Figure:
     """
     Create hour x weekday heatmap.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -187,20 +183,19 @@ def create_time_weekday_heatmap(df: pd.DataFrame, dark_mode: bool = False) -> go
         title="Donation Heatmap: Day of Week × Hour",
         xaxis_title="Hour of Day",
         yaxis_title="Day of Week",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=HEATMAP_HEIGHT
     )
     
     return fig
 
 
-def create_yearly_monthly_analysis(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_yearly_monthly_analysis(df: pd.DataFrame) -> go.Figure:
     """
     Create year-over-year monthly comparison.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -213,7 +208,7 @@ def create_yearly_monthly_analysis(df: pd.DataFrame, dark_mode: bool = False) ->
     month_order = ['January', 'February', 'March', 'April', 'May', 'June',
                    'July', 'August', 'September', 'October', 'November', 'December']
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = go.Figure()
     
@@ -235,7 +230,7 @@ def create_yearly_monthly_analysis(df: pd.DataFrame, dark_mode: bool = False) ->
         title="Monthly Donations Year-over-Year Comparison",
         xaxis_title="Month",
         yaxis_title="Total Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         hovermode='x unified'
     )

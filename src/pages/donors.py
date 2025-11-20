@@ -9,13 +9,12 @@ from ..services.metrics_service import calculate_donor_statistics, get_top_donor
 from ..components.donor_charts import create_top_donors_chart
 
 
-def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
+def render_donors_page(df: pd.DataFrame):
     """
     Render the donor analysis page.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
     """
     st.title(":material/group: Donor Analysis")
     
@@ -57,7 +56,7 @@ def render_donors_page(df: pd.DataFrame, dark_mode: bool = False):
     
     top_n = st.slider("Number of top donors to show", 5, 50, 10, key="top_donors_slider")
     
-    fig = create_top_donors_chart(df, top_n, dark_mode)
+    fig = create_top_donors_chart(df, top_n)
     st.plotly_chart(fig, use_container_width=True)
     
     # Top Donors Table

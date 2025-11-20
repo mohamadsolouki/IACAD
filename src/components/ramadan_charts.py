@@ -11,19 +11,18 @@ from ..config.theme import get_theme_colors, get_plot_template, get_chart_colors
 from ..config.settings import DEFAULT_CHART_HEIGHT
 
 
-def create_ramadan_comparison_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_ramadan_comparison_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create Ramadan vs Non-Ramadan comparison.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
     """
-    colors = get_theme_colors(dark_mode)
-    chart_colors = get_chart_colors(dark_mode)
+    colors = get_theme_colors()
+    chart_colors = get_chart_colors()
     
     # Group by Ramadan status
     comparison = df.groupby('is_ramadan').agg({
@@ -77,7 +76,7 @@ def create_ramadan_comparison_chart(df: pd.DataFrame, dark_mode: bool = False) -
     
     fig.update_layout(
         title="Ramadan vs Non-Ramadan Comparison",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         showlegend=False
     )
@@ -85,13 +84,12 @@ def create_ramadan_comparison_chart(df: pd.DataFrame, dark_mode: bool = False) -
     return fig
 
 
-def create_islamic_events_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_islamic_events_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create Islamic events distribution chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -112,7 +110,7 @@ def create_islamic_events_chart(df: pd.DataFrame, dark_mode: bool = False) -> go
     event_stats.columns = ['event', 'total_amount', 'avg_amount', 'count']
     event_stats = event_stats.nlargest(10, 'total_amount')
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = make_subplots(
         rows=1, cols=2,
@@ -146,7 +144,7 @@ def create_islamic_events_chart(df: pd.DataFrame, dark_mode: bool = False) -> go
     
     fig.update_layout(
         title="Donations During Islamic Events",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         showlegend=False
     )
@@ -156,13 +154,12 @@ def create_islamic_events_chart(df: pd.DataFrame, dark_mode: bool = False) -> go
     return fig
 
 
-def create_hijri_months_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_hijri_months_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create Hijri months analysis chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -181,7 +178,7 @@ def create_hijri_months_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.F
     
     monthly_stats.columns = ['month', 'total_amount', 'avg_amount', 'count']
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = go.Figure()
     
@@ -198,7 +195,7 @@ def create_hijri_months_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.F
         title="Donations by Hijri Month",
         xaxis_title="Hijri Month",
         yaxis_title="Total Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     

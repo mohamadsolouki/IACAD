@@ -42,13 +42,13 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================================
 
-def load_custom_css(dark_mode: bool = False):
+def load_custom_css():
     """Load custom CSS for better styling."""
-    bg_color = "#0e1117" if dark_mode else "#ffffff"
-    text_color = "#fafafa" if dark_mode else "#0e1117"
-    sidebar_bg = "#1e1e1e" if dark_mode else "#f5f5f5"
-    card_bg = "#262730" if dark_mode else "#ffffff"
-    border_color = "#3a3a3a" if dark_mode else "#e6e6e6"
+    bg_color = "#ffffff"
+    text_color = "#0e1117"
+    sidebar_bg = "#f5f5f5"
+    card_bg = "#ffffff"
+    border_color = "#e6e6e6"
     
     st.markdown(f"""
     <style>
@@ -112,9 +112,6 @@ def render_sidebar():
         # App Title
         st.markdown(f"### {APP_ICON} {APP_TITLE}")
         
-        # Theme Toggle (at top for easy access)
-        dark_mode = st.toggle(":material/dark_mode: Dark Mode", value=st.session_state.get('dark_mode', False))
-        
         st.divider()
         
         # Navigation
@@ -135,7 +132,7 @@ def render_sidebar():
         # Extract page name without icon
         page = page.split(" ", 1)[1]
     
-    return page, dark_mode
+    return page
 
 # ============================================================================
 # MAIN APPLICATION
@@ -147,8 +144,6 @@ def main():
     # Initialize session state
     if 'data' not in st.session_state:
         st.session_state.data = None
-    if 'dark_mode' not in st.session_state:
-        st.session_state.dark_mode = False
     
     # Load data
     if st.session_state.data is None:
@@ -158,15 +153,10 @@ def main():
     df = st.session_state.data
     
     # Render sidebar and get navigation
-    page, dark_mode = render_sidebar()
+    page = render_sidebar()
     
-    # Update dark mode in session state
-    if dark_mode != st.session_state.dark_mode:
-        st.session_state.dark_mode = dark_mode
-        st.rerun()
-    
-    # Load custom CSS with dark mode
-    load_custom_css(dark_mode)
+    # Load custom CSS
+    load_custom_css()
     
     # Check if data loaded successfully
     if df.empty:
@@ -185,19 +175,19 @@ def main():
     
     # Route to appropriate page
     if page == "Overview":
-        render_overview_page(df, dark_mode)
+        render_overview_page(df)
     
     elif page == "Ramadan Analysis":
-        render_ramadan_page(df, dark_mode)
+        render_ramadan_page(df)
     
     elif page == "Temporal Analysis":
-        render_temporal_page(df, dark_mode)
+        render_temporal_page(df)
     
     elif page == "Donor Analysis":
-        render_donors_page(df, dark_mode)
+        render_donors_page(df)
     
     elif page == "Comparison Tool":
-        render_comparison_page(df, dark_mode)
+        render_comparison_page(df)
 
 # ============================================================================
 # RUN APPLICATION

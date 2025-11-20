@@ -10,13 +10,12 @@ from ..config.theme import get_theme_colors, get_plot_template, get_chart_colors
 from ..config.settings import DEFAULT_CHART_HEIGHT
 
 
-def create_time_series_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_time_series_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create enhanced time series with Ramadan highlighting.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -27,7 +26,7 @@ def create_time_series_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fi
         'is_ramadan': 'first'
     }).reset_index()
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -64,7 +63,7 @@ def create_time_series_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fi
         xaxis_title="Date",
         yaxis_title="Amount (AED)",
         hovermode='x unified',
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         margin=dict(l=50, r=50, t=60, b=50),
         legend=dict(
@@ -79,13 +78,12 @@ def create_time_series_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fi
     return fig
 
 
-def create_cumulative_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_cumulative_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create cumulative donation amount chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -93,7 +91,7 @@ def create_cumulative_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fig
     daily_data = df.groupby('date')['amount'].sum().reset_index()
     daily_data['cumulative'] = daily_data['amount'].cumsum()
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -111,7 +109,7 @@ def create_cumulative_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fig
         title="Cumulative Donation Amount",
         xaxis_title="Date",
         yaxis_title="Cumulative Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         hovermode='x unified'
     )
@@ -121,8 +119,7 @@ def create_cumulative_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Fig
 
 def create_moving_average_chart(
     df: pd.DataFrame, 
-    window: int = 7, 
-    dark_mode: bool = False
+    window: int = 7
 ) -> go.Figure:
     """
     Create moving average chart.
@@ -130,7 +127,6 @@ def create_moving_average_chart(
     Args:
         df: Input DataFrame
         window: Window size for moving average
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -138,7 +134,7 @@ def create_moving_average_chart(
     daily_data = df.groupby('date')['amount'].sum().reset_index()
     daily_data['moving_avg'] = daily_data['amount'].rolling(window=window).mean()
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -165,7 +161,7 @@ def create_moving_average_chart(
         title=f"Donation Trends with {window}-Day Moving Average",
         xaxis_title="Date",
         yaxis_title="Amount (AED)",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         hovermode='x unified'
     )

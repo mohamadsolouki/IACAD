@@ -19,15 +19,20 @@ from ..components.category_charts import (
 )
 
 
-def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
+def render_overview_page(df: pd.DataFrame):
     """
     Render the overview dashboard page.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
     """
     st.title(":material/dashboard: Dashboard Overview")
+    
+    # Display banner image
+    try:
+        st.image("assets/images/1.jpeg", use_container_width=True)
+    except:
+        pass  # Skip if image not found
     
     if df.empty:
         st.warning("No data available to display.")
@@ -84,16 +89,16 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
     tab1, tab2, tab3 = st.tabs(["Time Series", "Cumulative", "Moving Average"])
     
     with tab1:
-        fig = create_time_series_chart(df, dark_mode)
+        fig = create_time_series_chart(df)
         st.plotly_chart(fig, use_container_width=True)
     
     with tab2:
-        fig = create_cumulative_chart(df, dark_mode)
+        fig = create_cumulative_chart(df)
         st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
         window = st.slider("Moving Average Window (days)", 3, 30, 7)
-        fig = create_moving_average_chart(df, window, dark_mode)
+        fig = create_moving_average_chart(df, window)
         st.plotly_chart(fig, use_container_width=True)
     
     st.divider()
@@ -103,8 +108,8 @@ def render_overview_page(df: pd.DataFrame, dark_mode: bool = False):
     
     top_n = st.slider("Number of categories to show", 5, 20, 10, key="category_slider")
     
-    fig = create_category_distribution(df, top_n, dark_mode)
+    fig = create_category_distribution(df, top_n)
     st.plotly_chart(fig, use_container_width=True)
     
-    fig = create_category_bar_chart(df, top_n, dark_mode)
+    fig = create_category_bar_chart(df, top_n)
     st.plotly_chart(fig, use_container_width=True)

@@ -12,8 +12,7 @@ from ..config.settings import DEFAULT_CHART_HEIGHT, TOP_N_CATEGORIES
 
 def create_category_distribution(
     df: pd.DataFrame, 
-    top_n: int = TOP_N_CATEGORIES, 
-    dark_mode: bool = False
+    top_n: int = TOP_N_CATEGORIES
 ) -> go.Figure:
     """
     Create category distribution pie chart.
@@ -21,7 +20,6 @@ def create_category_distribution(
     Args:
         df: Input DataFrame
         top_n: Number of top categories to show
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -48,7 +46,7 @@ def create_category_distribution(
     category_data = category_data.reset_index()
     category_data.columns = ['category', 'amount']
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = go.Figure(data=[go.Pie(
         labels=category_data['category'],
@@ -60,7 +58,7 @@ def create_category_distribution(
     
     fig.update_layout(
         title=f"Top {top_n} Donation Categories + Others",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     
@@ -69,8 +67,7 @@ def create_category_distribution(
 
 def create_category_bar_chart(
     df: pd.DataFrame, 
-    top_n: int = TOP_N_CATEGORIES,
-    dark_mode: bool = False
+    top_n: int = TOP_N_CATEGORIES
 ) -> go.Figure:
     """
     Create horizontal bar chart for categories.
@@ -78,7 +75,6 @@ def create_category_bar_chart(
     Args:
         df: Input DataFrame
         top_n: Number of top categories to show
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -94,7 +90,7 @@ def create_category_bar_chart(
     category_data = category_data.nlargest(top_n, 'total_amount')
     category_data = category_data.sort_values('total_amount')
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -113,25 +109,24 @@ def create_category_bar_chart(
         title=f"Top {top_n} Donation Categories by Amount",
         xaxis_title="Total Amount (AED)",
         yaxis_title="Category",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=max(DEFAULT_CHART_HEIGHT, top_n * 30)
     )
     
     return fig
 
 
-def create_amount_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_amount_distribution(df: pd.DataFrame) -> go.Figure:
     """
     Create amount distribution histogram.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
     """
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -146,7 +141,7 @@ def create_amount_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.
         title="Donation Amount Distribution",
         xaxis_title="Amount (AED)",
         yaxis_title="Frequency",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         showlegend=False
     )
@@ -154,13 +149,12 @@ def create_amount_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.
     return fig
 
 
-def create_amount_range_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_amount_range_distribution(df: pd.DataFrame) -> go.Figure:
     """
     Create grouped amount range distribution.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -178,7 +172,7 @@ def create_amount_range_distribution(df: pd.DataFrame, dark_mode: bool = False) 
     
     range_stats.columns = ['range', 'total_amount', 'count']
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = go.Figure()
     
@@ -195,7 +189,7 @@ def create_amount_range_distribution(df: pd.DataFrame, dark_mode: bool = False) 
         title="Donation Count by Amount Range",
         xaxis_title="Amount Range (AED)",
         yaxis_title="Number of Donations",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     

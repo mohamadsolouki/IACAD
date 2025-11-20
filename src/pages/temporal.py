@@ -14,13 +14,12 @@ from ..components.temporal_charts import (
 )
 
 
-def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
+def render_temporal_page(df: pd.DataFrame):
     """
     Render the temporal analysis page.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
     """
     st.title(":material/schedule: Temporal Analysis")
     
@@ -38,7 +37,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
     st.markdown("See how donations vary across months and years")
     
     if 'year' in df.columns and 'month_name' in df.columns:
-        fig = create_monthly_heatmap(df, dark_mode)
+        fig = create_monthly_heatmap(df)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("Year and month data not available.")
@@ -49,7 +48,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
     st.header("Year-over-Year Monthly Comparison")
     
     if 'year' in df.columns and 'month_name' in df.columns:
-        fig = create_yearly_monthly_analysis(df, dark_mode)
+        fig = create_yearly_monthly_analysis(df)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("Year and month data not available.")
@@ -64,7 +63,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
     with col1:
         st.subheader("Weekly Pattern")
         if 'weekday' in df.columns:
-            fig = create_weekday_pattern(df, dark_mode)
+            fig = create_weekday_pattern(df)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Weekday data not available.")
@@ -93,7 +92,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
     st.header("Hourly Patterns")
     
     if 'hour' in df.columns:
-        fig = create_hourly_pattern(df, dark_mode)
+        fig = create_hourly_pattern(df)
         st.plotly_chart(fig, use_container_width=True)
         
         # Hourly insights
@@ -123,7 +122,7 @@ def render_temporal_page(df: pd.DataFrame, dark_mode: bool = False):
     st.markdown("Identify the busiest time slots throughout the week")
     
     if 'hour' in df.columns and 'weekday' in df.columns:
-        fig = create_time_weekday_heatmap(df, dark_mode)
+        fig = create_time_weekday_heatmap(df)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("Hour and weekday data not available.")

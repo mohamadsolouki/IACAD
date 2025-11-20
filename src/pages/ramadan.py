@@ -14,15 +14,24 @@ from ..components.ramadan_charts import (
 )
 
 
-def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
+def render_ramadan_page(df: pd.DataFrame):
     """
     Render the Ramadan analysis page.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
     """
     st.title(":material/nightlight: Ramadan & Islamic Calendar Analysis")
+    
+    # Display Ramadan themed image
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        try:
+            st.image("assets/images/2.jpeg", use_container_width=True)
+        except:
+            pass  # Skip if image not found
+    
+    st.markdown("---")
     
     if df.empty:
         st.warning("No data available to display.")
@@ -86,7 +95,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
     
     # Ramadan Comparison Chart
     st.header("Ramadan vs Non-Ramadan Comparison")
-    fig = create_ramadan_comparison_chart(df, dark_mode)
+    fig = create_ramadan_comparison_chart(df)
     st.plotly_chart(fig, use_container_width=True)
     
     st.divider()
@@ -98,7 +107,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
         events_df = df[df['islamic_event'].notna()]
         
         if not events_df.empty:
-            fig = create_islamic_events_chart(df, dark_mode)
+            fig = create_islamic_events_chart(df)
             st.plotly_chart(fig, use_container_width=True)
             
             # Event details table
@@ -125,7 +134,7 @@ def render_ramadan_page(df: pd.DataFrame, dark_mode: bool = False):
         hijri_df = df[df['hijri_month_name'].notna()]
         
         if not hijri_df.empty:
-            fig = create_hijri_months_chart(df, dark_mode)
+            fig = create_hijri_months_chart(df)
             st.plotly_chart(fig, use_container_width=True)
             
             # Hijri month details

@@ -12,8 +12,7 @@ from ..config.settings import DEFAULT_CHART_HEIGHT, TOP_N_DONORS
 
 def create_top_donors_chart(
     df: pd.DataFrame,
-    top_n: int = TOP_N_DONORS,
-    dark_mode: bool = False
+    top_n: int = TOP_N_DONORS
 ) -> go.Figure:
     """
     Create top donors chart.
@@ -21,7 +20,6 @@ def create_top_donors_chart(
     Args:
         df: Input DataFrame
         top_n: Number of top donors to show
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -37,8 +35,8 @@ def create_top_donors_chart(
     donor_data = donor_data.nlargest(top_n, 'total_amount')
     donor_data['donor_label'] = [f"Donor {i+1}" for i in range(len(donor_data))]
     
-    colors = get_theme_colors(dark_mode)
-    chart_colors = get_chart_colors(dark_mode)
+    colors = get_theme_colors()
+    chart_colors = get_chart_colors()
     
     fig = make_subplots(
         rows=1, cols=2,
@@ -73,7 +71,7 @@ def create_top_donors_chart(
     )
     
     fig.update_layout(
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT,
         showlegend=False
     )
@@ -83,13 +81,12 @@ def create_top_donors_chart(
     return fig
 
 
-def create_donor_behavior_analysis(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_donor_behavior_analysis(df: pd.DataFrame) -> go.Figure:
     """
     Create donor behavior segmentation chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -117,7 +114,7 @@ def create_donor_behavior_analysis(df: pd.DataFrame, dark_mode: bool = False) ->
     
     segment_stats.columns = ['segment', 'donor_count', 'total_amount', 'total_donations']
     
-    colors = get_chart_colors(dark_mode)
+    colors = get_chart_colors()
     
     fig = make_subplots(
         rows=1, cols=2,
@@ -149,20 +146,19 @@ def create_donor_behavior_analysis(df: pd.DataFrame, dark_mode: bool = False) ->
     
     fig.update_layout(
         title="Donor Behavior Segmentation",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     
     return fig
 
 
-def create_donor_retention_chart(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_donor_retention_chart(df: pd.DataFrame) -> go.Figure:
     """
     Create donor retention/repeat rate chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -175,7 +171,7 @@ def create_donor_retention_chart(df: pd.DataFrame, dark_mode: bool = False) -> g
     yearly_donors = yearly_donors.groupby('year')['id'].nunique().reset_index()
     yearly_donors.columns = ['year', 'unique_donors']
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -192,20 +188,19 @@ def create_donor_retention_chart(df: pd.DataFrame, dark_mode: bool = False) -> g
         title="Unique Donors by Year",
         xaxis_title="Year",
         yaxis_title="Number of Unique Donors",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     
     return fig
 
 
-def create_donation_frequency_distribution(df: pd.DataFrame, dark_mode: bool = False) -> go.Figure:
+def create_donation_frequency_distribution(df: pd.DataFrame) -> go.Figure:
     """
     Create donation frequency distribution chart.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
         
     Returns:
         Plotly Figure object
@@ -221,7 +216,7 @@ def create_donation_frequency_distribution(df: pd.DataFrame, dark_mode: bool = F
     freq_dist.columns = ['donations', 'donor_count']
     freq_dist = freq_dist[freq_dist['donations'] <= 20]  # Limit to 20 for readability
     
-    colors = get_theme_colors(dark_mode)
+    colors = get_theme_colors()
     
     fig = go.Figure()
     
@@ -238,7 +233,7 @@ def create_donation_frequency_distribution(df: pd.DataFrame, dark_mode: bool = F
         title="Donation Frequency Distribution",
         xaxis_title="Number of Donations",
         yaxis_title="Number of Donors",
-        template=get_plot_template(dark_mode),
+        template=get_plot_template(),
         height=DEFAULT_CHART_HEIGHT
     )
     

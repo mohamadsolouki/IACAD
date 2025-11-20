@@ -12,13 +12,12 @@ from ..components.kpi_cards import display_comparison_metrics
 from ..components.category_charts import create_category_bar_chart
 
 
-def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
+def render_comparison_page(df: pd.DataFrame):
     """
     Render the comparison tool page.
     
     Args:
         df: Input DataFrame
-        dark_mode: Whether to use dark theme
     """
     st.title(":material/compare: Period Comparison Tool")
     
@@ -195,7 +194,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
     with col1:
         st.subheader(f"Period 1: {period1_label}")
         if not df1.empty:
-            fig1 = create_category_bar_chart(df1, 10, dark_mode)
+            fig1 = create_category_bar_chart(df1, 10)
             st.plotly_chart(fig1, use_container_width=True)
             st.caption(f"Total: AED {df1['amount'].sum():,.2f} | Count: {len(df1):,}")
         else:
@@ -204,7 +203,7 @@ def render_comparison_page(df: pd.DataFrame, dark_mode: bool = False):
     with col2:
         st.subheader(f"Period 2: {period2_label}")
         if not df2.empty:
-            fig2 = create_category_bar_chart(df2, 10, dark_mode)
+            fig2 = create_category_bar_chart(df2, 10)
             st.plotly_chart(fig2, use_container_width=True)
             st.caption(f"Total: AED {df2['amount'].sum():,.2f} | Count: {len(df2):,}")
         else:
