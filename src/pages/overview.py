@@ -108,8 +108,68 @@ def render_overview_page(df: pd.DataFrame):
     
     top_n = st.slider("Number of categories to show", 5, 20, 10, key="category_slider")
     
-    fig = create_category_distribution(df, top_n)
-    st.plotly_chart(fig, use_container_width=True)
+    tab1, tab2 = st.tabs(["Distribution Chart", "Bar Chart"])
     
-    fig = create_category_bar_chart(df, top_n)
-    st.plotly_chart(fig, use_container_width=True)
+    with tab1:
+        fig = create_category_distribution(df, top_n)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        fig = create_category_bar_chart(df, top_n)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    st.divider()
+    
+    # Donation Size Analysis
+    st.header("Donation Size Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Donation size segments
+        bins = [0, 100, 500, 1000, 5000, 10000, float('inf')]
+        labels = ['Under 100', '100-500', '500-1K', '1K-5K', '5K-10K', 'Above 10K']
+        df_temp = df.copy()
+        df_temp['size_segment'] = pd.cut(df_temp['amount'], bins=bins, labels=labels)
+        
+        size_stats = df_temp.groupby('size_segment', observed=True).agg({
+            'amount': ['count', 'sum']
+        }).reset_index()
+        size_stats.columns = ['Segment', 'Count', 'Total']
+        size_stats['Avg'] = (size_stats['Total'] / size_stats['Count']).round(2)
+        size_stats['% of Donations'] = (size_stats['Count'] / len(df) * 100).round(1)
+        size_stats['% of Amount'] = (size_stats['Total'] / df['amount'].sum() * 100).round(1)
+        
+        st.subheader("Distribution by Size")
+        st.dataframe(
+            size_stats[['Segment', 'Count', '% of Donations', '% of Amount']],
+            use_container_width=True,
+            hide_index=True
+        )
+    
+    with col2:
+        # Key insights
+        st.subheader("Key Insights")
+        small_donations = df[df['amount'] < 500]
+        large_donations = df[df['amount'] >= 5000]
+        
+        st.metric(
+            "Small Donations (<500 AED)",
+            f"{len(small_donations):,}",
+            f"{len(small_donations)/len(df)*100:.1f}% of total"
+        )
+        
+        st.metric(
+            "Large Donations (≥5,000 AED)",
+            f"{len(large_donations):,}",
+            f"{large_donations['amount'].sum()/df['amount'].sum()*100:.1f}% of amount"
+        )
+        
+        # Concentration metric
+        top_20_pct_donations = df.nlargest(int(len(df) * 0.2), 'amount')
+        concentration = top_20_pct_donations['amount'].sum() / df['amount'].sum() * 100
+        st.metric(
+            "Concentration (80/20 Rule)",
+            f"{concentration:.1f}%",
+            "of amount from top 20% donations"
+        )

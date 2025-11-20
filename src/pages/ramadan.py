@@ -100,6 +100,32 @@ def render_ramadan_page(df: pd.DataFrame):
     
     st.divider()
     
+    # Category Performance During Ramadan
+    if 'donationtype' in df.columns or 'donationtype_en' in df.columns:
+        st.header("Category Performance: Ramadan vs Non-Ramadan")
+        
+        column = 'donationtype_en' if 'donationtype_en' in df.columns else 'donationtype'
+        
+        ramadan_cats = ramadan_df.groupby(column)['amount'].agg(['sum', 'count']).reset_index()
+        non_ramadan_cats = non_ramadan_df.groupby(column)['amount'].agg(['sum', 'count']).reset_index()
+        
+        ramadan_cats.columns = ['Category', 'Ramadan_Amount', 'Ramadan_Count']
+        non_ramadan_cats.columns = ['Category', 'NonRamadan_Amount', 'NonRamadan_Count']
+        
+        comparison = pd.merge(ramadan_cats, non_ramadan_cats, on='Category', how='outer').fillna(0)
+        comparison['Ramadan_Avg'] = comparison['Ramadan_Amount'] / comparison['Ramadan_Count'].replace(0, 1)
+        comparison['NonRamadan_Avg'] = comparison['NonRamadan_Amount'] / comparison['NonRamadan_Count'].replace(0, 1)
+        comparison['Increase_%'] = ((comparison['Ramadan_Avg'] - comparison['NonRamadan_Avg']) / comparison['NonRamadan_Avg'].replace(0, 1) * 100).round(1)
+        
+        top_increased = comparison.nlargest(5, 'Increase_%')[['Category', 'Increase_%']]
+        
+        st.subheader("Top Categories with Ramadan Boost")
+        for idx, row in top_increased.iterrows():
+            if row['Increase_%'] > 0:
+                st.success(f"**{row['Category']}**: +{row['Increase_%']:.1f}% increase during Ramadan")
+    
+    st.divider()
+    
     # Islamic Events Analysis
     if 'islamic_event' in df.columns:
         st.header("Donations During Islamic Events")

@@ -183,6 +183,38 @@ def render_comparison_page(df: pd.DataFrame):
     
     st.dataframe(comparison_df, use_container_width=True, hide_index=True)
     
+    # Key Insights from Comparison
+    st.subheader(":material/lightbulb: Key Insights")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        amount_change = changes.get('total_amount', {}).get('percentage', 0)
+        if abs(amount_change) > 20:
+            emoji = "🚀" if amount_change > 0 else "⚠️"
+            st.info(f"{emoji} **Significant Change**\\n\\nTotal amount changed by {amount_change:+.1f}%")
+        else:
+            st.success("✓ **Stable Performance**\\n\\nAmount change within ±20%")
+    
+    with col2:
+        count_change = changes.get('total_donations', {}).get('percentage', 0)
+        avg_change = changes.get('avg_donation', {}).get('percentage', 0)
+        
+        if count_change > 0 and avg_change > 0:
+            st.success("📈 **Growth in Both**\\n\\nMore donations AND higher average")
+        elif count_change < 0 and avg_change > 0:
+            st.warning("⚖️ **Quality over Quantity**\\n\\nFewer but larger donations")
+        elif count_change > 0 and avg_change < 0:
+            st.info("📊 **Volume Increase**\\n\\nMore but smaller donations")
+        else:
+            st.error("📉 **Decline**\\n\\nBoth count and average decreased")
+    
+    with col3:
+        if 'ramadan_amount' in kpis1 and 'ramadan_amount' in kpis2:
+            ramadan_change = changes.get('ramadan_amount', {}).get('percentage', 0)
+            if abs(ramadan_change) > 10:
+                st.info(f"🌙 **Ramadan Impact**\\n\\nRamadan donations {ramadan_change:+.1f}%")
+    
     st.divider()
     
     # Side-by-side Category Comparison

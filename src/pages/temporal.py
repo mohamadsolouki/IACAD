@@ -32,6 +32,47 @@ def render_temporal_page(df: pd.DataFrame):
     hours, days, weeks, months, and years.
     """)
     
+    # Donation Peaks Analysis
+    st.header("Donation Peaks & Trends")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Best day
+        best_day = df.groupby('date')['amount'].sum().idxmax()
+        best_day_amount = df.groupby('date')['amount'].sum().max()
+        st.metric(
+            "Best Single Day",
+            f"{best_day.strftime('%Y-%m-%d')}",
+            f"AED {best_day_amount:,.0f}"
+        )
+    
+    with col2:
+        # Best month
+        if 'year' in df.columns and 'month' in df.columns:
+            df_temp = df.copy()
+            df_temp['year_month'] = df_temp['year'].astype(str) + '-' + df_temp['month'].astype(str).str.zfill(2)
+            best_month = df_temp.groupby('year_month')['amount'].sum().idxmax()
+            best_month_amount = df_temp.groupby('year_month')['amount'].sum().max()
+            st.metric(
+                "Best Month",
+                best_month,
+                f"AED {best_month_amount:,.0f}"
+            )
+    
+    with col3:
+        # Average daily donation
+        avg_daily = df.groupby('date')['amount'].sum().mean()
+        std_daily = df.groupby('date')['amount'].sum().std()
+        cv = (std_daily / avg_daily * 100) if avg_daily > 0 else 0
+        st.metric(
+            "Daily Consistency",
+            f"{cv:.0f}%",
+            "coefficient of variation"
+        )
+    
+    st.divider()
+    
     # Monthly Heatmap
     st.header("Monthly Donation Heatmap")
     st.markdown("See how donations vary across months and years")
@@ -50,6 +91,29 @@ def render_temporal_page(df: pd.DataFrame):
     if 'year' in df.columns and 'month_name' in df.columns:
         fig = create_yearly_monthly_analysis(df)
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Seasonal Analysis
+        with st.expander(":material/wb_sunny: Seasonal Trends"):
+            if 'quarter' in df.columns:
+                st.subheader("Quarterly Performance")
+                quarterly = df.groupby('quarter').agg({
+                    'amount': ['sum', 'mean', 'count']
+                }).reset_index()
+                quarterly.columns = ['Quarter', 'Total', 'Average', 'Count']
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    best_q = quarterly.loc[quarterly['Total'].idxmax()]
+                    st.info(f"**Best Quarter:** Q{int(best_q['Quarter'])}\n\nTotal: AED {best_q['Total']:,.0f}")
+                
+                with col2:
+                    worst_q = quarterly.loc[quarterly['Total'].idxmin()]
+                    st.warning(f"**Weakest Quarter:** Q{int(worst_q['Quarter'])}\n\nTotal: AED {worst_q['Total']:,.0f}")
+                
+                quarterly['Total'] = quarterly['Total'].apply(lambda x: f"AED {x:,.2f}")
+                quarterly['Average'] = quarterly['Average'].apply(lambda x: f"AED {x:,.2f}")
+                st.dataframe(quarterly, use_container_width=True, hide_index=True)
     else:
         st.warning("Year and month data not available.")
     
