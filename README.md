@@ -107,8 +107,7 @@ Use the sidebar to navigate between different sections:
 1. **Overview**: Get a comprehensive view of all donations
 2. **Ramadan Analysis**: Explore Ramadan-specific patterns
 3. **Temporal Analysis**: Analyze patterns over time
-4. **Donor Analysis**: Understand donor behavior
-5. **Comparison Tool**: Compare different time periods
+4. **Comparison Tool**: Compare different time periods
 
 ### Features
 

@@ -6,7 +6,6 @@ A comprehensive dashboard for analyzing donation data with:
 - Interactive visualizations
 - Ramadan and Islamic calendar analysis
 - Temporal pattern analysis
-- Donor behavior insights
 - Period comparison tools
 """
 
@@ -23,7 +22,6 @@ from src.pages import (
     render_overview_page,
     render_ramadan_page,
     render_temporal_page,
-    render_donors_page,
     render_comparison_page
 )
 
@@ -110,7 +108,7 @@ def render_sidebar():
     """Render the sidebar with navigation and filters."""
     with st.sidebar:
         # App Title
-        st.markdown(f"### {APP_ICON} {APP_TITLE}")
+        st.markdown(f"### {APP_TITLE}")
         
         st.divider()
         
@@ -122,7 +120,6 @@ def render_sidebar():
                 ":material/dashboard: Overview",
                 ":material/nightlight: Ramadan Analysis",
                 ":material/schedule: Temporal Analysis",
-                ":material/group: Donor Analysis",
                 ":material/compare: Comparison Tool"
             ],
             label_visibility="collapsed",
@@ -182,9 +179,6 @@ def main():
     
     elif page == "Temporal Analysis":
         render_temporal_page(df)
-    
-    elif page == "Donor Analysis":
-        render_donors_page(df)
     
     elif page == "Comparison Tool":
         render_comparison_page(df)

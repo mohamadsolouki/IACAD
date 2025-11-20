@@ -132,10 +132,9 @@ def render_temporal_page(df: pd.DataFrame):
         if 'year' in df.columns:
             st.subheader("Yearly Statistics")
             yearly_stats = df.groupby('year').agg({
-                'amount': ['sum', 'mean', 'count'],
-                'id': 'nunique'
+                'amount': ['sum', 'mean', 'count']
             }).reset_index()
-            yearly_stats.columns = ['Year', 'Total Amount', 'Avg Amount', 'Count', 'Unique Donors']
+            yearly_stats.columns = ['Year', 'Total Amount', 'Avg Amount', 'Count']
             yearly_stats['Total Amount'] = yearly_stats['Total Amount'].apply(lambda x: f"AED {x:,.2f}")
             yearly_stats['Avg Amount'] = yearly_stats['Avg Amount'].apply(lambda x: f"AED {x:,.2f}")
             

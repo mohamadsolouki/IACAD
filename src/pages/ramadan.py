@@ -113,11 +113,10 @@ def render_ramadan_page(df: pd.DataFrame):
             # Event details table
             with st.expander(":material/analytics: Islamic Events Details"):
                 event_stats = events_df.groupby('islamic_event').agg({
-                    'amount': ['sum', 'mean', 'count'],
-                    'id': 'nunique'
+                    'amount': ['sum', 'mean', 'count']
                 }).reset_index()
                 
-                event_stats.columns = ['Event', 'Total Amount', 'Avg Amount', 'Count', 'Unique Donors']
+                event_stats.columns = ['Event', 'Total Amount', 'Avg Amount', 'Count']
                 event_stats['Total Amount'] = event_stats['Total Amount'].apply(lambda x: f"AED {x:,.2f}")
                 event_stats['Avg Amount'] = event_stats['Avg Amount'].apply(lambda x: f"AED {x:,.2f}")
                 
@@ -140,11 +139,10 @@ def render_ramadan_page(df: pd.DataFrame):
             # Hijri month details
             with st.expander(":material/analytics: Hijri Month Details"):
                 hijri_stats = hijri_df.groupby('hijri_month_name').agg({
-                    'amount': ['sum', 'mean', 'count'],
-                    'id': 'nunique'
+                    'amount': ['sum', 'mean', 'count']
                 }).reset_index()
                 
-                hijri_stats.columns = ['Hijri Month', 'Total Amount', 'Avg Amount', 'Count', 'Unique Donors']
+                hijri_stats.columns = ['Hijri Month', 'Total Amount', 'Avg Amount', 'Count']
                 hijri_stats['Total Amount'] = hijri_stats['Total Amount'].apply(lambda x: f"AED {x:,.2f}")
                 hijri_stats['Avg Amount'] = hijri_stats['Avg Amount'].apply(lambda x: f"AED {x:,.2f}")
                 hijri_stats = hijri_stats.sort_values('Count', ascending=False)
