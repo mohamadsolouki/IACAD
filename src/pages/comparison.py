@@ -154,7 +154,6 @@ def render_comparison_page(df: pd.DataFrame):
         ('total_amount', 'Total Amount', 'AED '),
         ('avg_donation', 'Average Donation', 'AED '),
         ('median_donation', 'Median Donation', 'AED '),
-        ('unique_donors', 'Unique Donors', ''),
         ('ramadan_donations', 'Ramadan Donations', ''),
         ('ramadan_amount', 'Ramadan Amount', 'AED '),
     ]
